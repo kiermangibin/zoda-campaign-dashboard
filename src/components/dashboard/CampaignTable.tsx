@@ -21,17 +21,23 @@ export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-0">
-        <CardTitle>Signals and next moves</CardTitle>
-        <p className="text-sm text-muted-foreground">Campaign rows to scale, fix, watch, or pause.</p>
+        <CardTitle>Search opportunities</CardTitle>
+        <p className="text-sm text-muted-foreground">Live Search Console query and page rows ranked by current demand.</p>
       </CardHeader>
       <CardContent className="pt-4">
+        {campaigns.length === 0 ? (
+          <div className="rounded-md border border-border bg-background p-4 text-sm text-muted-foreground">
+            No Search Console rows returned for this range yet.
+          </div>
+        ) : (
+        <div className="overflow-x-auto rounded-md border border-border">
         <Table className="min-w-[840px]">
           <TableHeader className="bg-muted/40">
             <TableRow className="border-border hover:bg-transparent">
-              <TableHead className="px-3 text-xs text-muted-foreground">Campaign</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Query</TableHead>
               <TableHead className="px-3 text-xs text-muted-foreground">Channel</TableHead>
               <TableHead className="px-3 text-xs text-muted-foreground">Metric</TableHead>
-              <TableHead className="px-3 text-xs text-muted-foreground">Signal</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Page signal</TableHead>
               <TableHead className="px-3 text-xs text-muted-foreground">Next move</TableHead>
             </TableRow>
           </TableHeader>
@@ -53,6 +59,8 @@ export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
             ))}
           </TableBody>
         </Table>
+        </div>
+        )}
       </CardContent>
     </Card>
   );

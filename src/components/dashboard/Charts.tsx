@@ -28,10 +28,15 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-0">
-        <CardTitle>Daily performance</CardTitle>
-        <p className="text-sm text-muted-foreground">Revenue and conversions across the selected window.</p>
+        <CardTitle>Daily website activity</CardTitle>
+        <p className="text-sm text-muted-foreground">GA4 sessions, key events, and purchase revenue in the selected window.</p>
       </CardHeader>
       <CardContent className="pt-4">
+      {data.length === 0 ? (
+        <div className="flex h-[300px] items-center justify-center rounded-md border border-border bg-background px-4 text-center text-sm text-muted-foreground">
+          GA4 did not return daily rows for this range.
+        </div>
+      ) : (
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ left: -20, right: 12, top: 8, bottom: 0 }}>
@@ -50,6 +55,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
+      )}
       </CardContent>
     </Card>
   );
@@ -63,6 +69,11 @@ export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
         <p className="text-sm text-muted-foreground">Share of demand by channel.</p>
       </CardHeader>
       <CardContent className="pt-4">
+      {data.every((item) => item.share === 0) ? (
+        <div className="flex h-[220px] items-center justify-center rounded-md border border-border bg-background px-4 text-center text-sm text-muted-foreground">
+          GA4 and Search Console did not return enough demand data for a channel mix.
+        </div>
+      ) : (
       <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -78,6 +89,7 @@ export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
+      )}
       <div className="grid gap-2">
         {data.map((item) => (
           <div key={item.channel} className="flex items-center justify-between border-t border-border py-2.5">
@@ -99,6 +111,11 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
         <p className="text-sm text-muted-foreground">Impression to order path.</p>
       </CardHeader>
       <CardContent className="pt-4">
+      {data.every((item) => item.value === 0) ? (
+        <div className="flex h-[250px] items-center justify-center rounded-md border border-border bg-background px-4 text-center text-sm text-muted-foreground">
+          No funnel values are available from the connected sources.
+        </div>
+      ) : (
       <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 38, right: 12, top: 0, bottom: 0 }}>
@@ -110,6 +127,7 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+      )}
       </CardContent>
     </Card>
   );

@@ -47,6 +47,13 @@ type SupabaseStatus = {
   projectRef?: string;
 };
 
+type AuthSession = {
+  user?: {
+    name?: string | null;
+    email?: string | null;
+  };
+};
+
 function NavigationLinks() {
   const pathname = usePathname();
 
@@ -82,6 +89,7 @@ function NavigationLinks() {
 
 function SidebarContent() {
   const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -106,6 +114,23 @@ function SidebarContent() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/auth/session")
+      .then((response) => response.json() as Promise<AuthSession>)
+      .then((currentSession) => {
+        if (mounted) setSession(currentSession);
+      })
+      .catch(() => {
+        if (mounted) setSession(null);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const sources = useMemo(
     () => [
       { label: "Google", status: "ready", tone: "text-primary" },
@@ -122,6 +147,15 @@ function SidebarContent() {
     ],
     [supabaseStatus]
   );
+
+  const accountName = session?.user?.name || "ZODA team";
+  const accountEmail = session?.user?.email || "Not signed in";
+  const accountInitials = accountName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "ZD";
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -206,12 +240,12 @@ function SidebarContent() {
         >
           <Avatar className="h-9 w-9 rounded-md">
             <AvatarFallback className="rounded-md bg-card text-xs font-semibold text-foreground">
-              ZD
+              {accountInitials}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">ZODA team</p>
-            <p className="truncate text-xs text-muted-foreground">m@zoda.sg</p>
+            <p className="truncate text-sm font-semibold text-foreground">{accountName}</p>
+            <p className="truncate text-xs text-muted-foreground">{accountEmail}</p>
           </div>
           <MoreVertical className="h-4 w-4 text-muted-foreground" />
         </Link>

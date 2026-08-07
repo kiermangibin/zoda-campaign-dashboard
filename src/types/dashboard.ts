@@ -54,8 +54,17 @@ export interface ActionNote {
 export interface DashboardSummary {
   range: RangeKey;
   campaign: string;
-  source?: "live" | "mock";
+  source?: "live" | "partial" | "unavailable";
   statusLabel?: string;
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  dataSources?: Array<{
+    name: string;
+    status: "live" | "not_connected" | "error";
+    detail: string;
+  }>;
   metrics: MetricCard[];
   trend: TrendPoint[];
   channels: ChannelPerformance[];

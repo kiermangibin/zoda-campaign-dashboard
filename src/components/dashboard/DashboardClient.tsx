@@ -7,8 +7,10 @@ import { ChannelMix, FunnelChart, TrendChart } from "@/components/dashboard/Char
 import { Filters } from "@/components/dashboard/Filters";
 import { MetricCards } from "@/components/dashboard/MetricCards";
 import type { DashboardSummary, RangeKey } from "@/types/dashboard";
+import { AlertCircle, CheckCircle2, CircleDashed } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export function DashboardClient() {
   const [range, setRange] = useState<RangeKey>("30d");
@@ -49,21 +51,39 @@ export function DashboardClient() {
     return () => controller.abort();
   }, [range, campaign]);
 
+  const sourceStyles = {
+    live: {
+      icon: CheckCircle2,
+      className: "border-primary/30 bg-primary/10 text-primary",
+      label: "Live"
+    },
+    not_connected: {
+      icon: CircleDashed,
+      className: "border-yellow-300/30 bg-yellow-300/10 text-yellow-200",
+      label: "Not connected"
+    },
+    error: {
+      icon: AlertCircle,
+      className: "border-red-400/30 bg-red-400/10 text-red-200",
+      label: "Error"
+    }
+  } as const;
+
   return (
     <div className="space-y-5">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-primary/40 text-primary">Overview</Badge>
+            <Badge variant="outline" className="border-primary/40 text-primary">Live overview</Badge>
             <span className="text-xs text-muted-foreground">
               {isLoading ? "Syncing live data" : data?.statusLabel || "Dashboard data"}
             </span>
           </div>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-            Campaign performance
+            ZODA performance
           </h1>
           <p className="mt-2 max-w-[720px] text-sm leading-6 text-muted-foreground">
-            Track demand, spend efficiency, and next actions across Ads, Social, SEO, and Website.
+            Real GA4 website activity and Search Console demand. Paid media, social, and Shopify stay marked as disconnected until their APIs are wired.
           </p>
         </div>
         <Filters
@@ -84,6 +104,34 @@ export function DashboardClient() {
         <>
           <MetricCards metrics={data.metrics} />
 
+          {data.dataSources ? (
+            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Data source status">
+              {data.dataSources.map((source) => {
+                const style = sourceStyles[source.status];
+                const Icon = style.icon;
+
+                return (
+                  <Card key={source.name} className="border-border bg-card">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{source.name}</p>
+                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                            {source.detail}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cn("shrink-0 gap-1.5", style.className)}>
+                          <Icon className="h-3.5 w-3.5" />
+                          {style.label}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </section>
+          ) : null}
+
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
             <TrendChart data={data.trend} />
             <ChannelMix data={data.channels} />
@@ -97,7 +145,7 @@ export function DashboardClient() {
                 <CardContent className="p-4">
                   <p className="text-sm font-semibold text-foreground">Current focus</p>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    Live GA4 and Search Console are connected. Shopify, paid media, and social syncs are the next data sources.
+                    The live view is limited to connected sources. Shopify/order data and paid/social spend will appear only after those connectors are added.
                   </p>
                 </CardContent>
               </Card>

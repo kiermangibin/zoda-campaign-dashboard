@@ -1,5 +1,4 @@
 import "server-only";
-import { getDashboardSummary as getMockDashboardSummary } from "@/data/mock-dashboard";
 import { fetchGa4Summary } from "@/lib/ga4";
 import { fetchGscSummary } from "@/lib/gsc";
 import type { ChannelPerformance, DashboardSummary, FunnelStep, RangeKey, TrendPoint } from "@/types/dashboard";
@@ -49,26 +48,6 @@ function buildChannelMix(ga4Sessions: number, gscClicks: number, gscImpressions:
 
   return [
     {
-      channel: "Ads",
-      share: 0,
-      spend: 0,
-      clicks: 0,
-      conversions: 0,
-      revenue: 0,
-      signal: "Ad platform sync is not connected yet.",
-      nextMove: "Add paid platform credentials after GA4 and SEO storage are stable."
-    },
-    {
-      channel: "Social",
-      share: 0,
-      spend: 0,
-      clicks: 0,
-      conversions: 0,
-      revenue: 0,
-      signal: "Social sync is not connected yet.",
-      nextMove: "Keep social campaign rows planned until Meta/TikTok data is wired."
-    },
-    {
       channel: "SEO",
       share: share(gscClicks, demand),
       spend: 0,
@@ -101,8 +80,22 @@ function buildFunnel(impressions: number, clicks: number, sessions: number, acti
   ];
 }
 
-function buildLiveSummary(range: RangeKey, campaign: string, ga4: Awaited<ReturnType<typeof fetchGa4Summary>>, gsc: Awaited<ReturnType<typeof fetchGscSummary>>): DashboardSummary {
-  const trend: TrendPoint[] = ga4.rows.map((row) => ({
+type Ga4Result = Awaited<ReturnType<typeof fetchGa4Summary>>;
+type GscResult = Awaited<ReturnType<typeof fetchGscSummary>>;
+
+function sourceError(result: PromiseSettledResult<unknown>) {
+  if (result.status === "fulfilled") return "";
+  return result.reason instanceof Error ? result.reason.message : String(result.reason);
+}
+
+function buildSummaryFromSources(
+  range: RangeKey,
+  campaign: string,
+  ga4: Ga4Result | null,
+  gsc: GscResult | null,
+  errors: { ga4?: string; gsc?: string }
+): DashboardSummary {
+  const trend: TrendPoint[] = (ga4?.rows || []).map((row) => ({
     date: trendLabel(row.date),
     spend: 0,
     clicks: row.sessions,
@@ -110,69 +103,85 @@ function buildLiveSummary(range: RangeKey, campaign: string, ga4: Awaited<Return
     revenue: row.purchaseRevenue
   }));
 
+  const ga4Totals = ga4?.totals || {
+    activeUsers: 0,
+    sessions: 0,
+    eventCount: 0,
+    conversions: 0,
+    purchaseRevenue: 0
+  };
+  const gscTotals = gsc?.totals || {
+    clicks: 0,
+    impressions: 0,
+    ctr: 0,
+    position: 0
+  };
+  const hasAnyLiveSource = Boolean(ga4 || gsc);
+  const hasAllLiveSources = Boolean(ga4 && gsc);
+
   return {
     range,
     campaign,
-    source: "live",
-    statusLabel: "Live GA4 + GSC",
-    metrics: [
-      { label: "Sessions", value: wholeNumber(ga4.totals.sessions), delta: "Live", note: "From GA4 Data API" },
-      { label: "Active users", value: wholeNumber(ga4.totals.activeUsers), delta: "Live", note: "From GA4 Data API" },
-      { label: "Events", value: wholeNumber(ga4.totals.eventCount), delta: "Live", note: "Website events in range" },
-      { label: "Key events", value: wholeNumber(ga4.totals.conversions), delta: "Live", note: "GA4 conversion events" },
-      { label: "Revenue", value: money(ga4.totals.purchaseRevenue), delta: "Live", note: "GA4 purchase revenue" },
-      { label: "SEO clicks", value: wholeNumber(gsc.totals.clicks), delta: "Live", note: "From Search Console" },
-      { label: "SEO impressions", value: compactNumber(gsc.totals.impressions), delta: percent(gsc.totals.ctr), note: "Search CTR" },
-      { label: "Avg position", value: gsc.totals.position.toFixed(1), delta: "Live", note: "Weighted Search Console position" }
-    ],
-    trend,
-    channels: buildChannelMix(ga4.totals.sessions, gsc.totals.clicks, gsc.totals.impressions),
-    funnel: buildFunnel(
-      gsc.totals.impressions,
-      gsc.totals.clicks,
-      ga4.totals.sessions,
-      ga4.totals.activeUsers,
-      ga4.totals.eventCount
-    ),
-    campaigns: [
+    source: hasAllLiveSources ? "live" : hasAnyLiveSource ? "partial" : "unavailable",
+    statusLabel: hasAllLiveSources ? "Live GA4 + GSC" : hasAnyLiveSource ? "Partial live data" : "No live data available",
+    dateRange: {
+      startDate: ga4?.dateRange.startDate || gsc?.dateRange.startDate || "",
+      endDate: ga4?.dateRange.endDate || gsc?.dateRange.endDate || ""
+    },
+    dataSources: [
       {
-        name: "Organic Search Demand",
-        channel: "SEO",
-        metric: `${wholeNumber(gsc.totals.clicks)} clicks`,
-        signal: `${compactNumber(gsc.totals.impressions)} impressions at ${percent(gsc.totals.ctr)} CTR.`,
-        nextMove: "Watch",
-        status: "watch"
+        name: "Google Analytics",
+        status: ga4 ? "live" : "error",
+        detail: ga4 ? `Property ${ga4.propertyId}` : errors.ga4 || "GA4 request failed."
       },
       {
-        name: "ZODA Website Engagement",
-        channel: "Website",
-        metric: `${wholeNumber(ga4.totals.sessions)} sessions`,
-        signal: `${wholeNumber(ga4.totals.eventCount)} events from ${wholeNumber(ga4.totals.activeUsers)} active users.`,
-        nextMove: "Fix",
-        status: "fix"
+        name: "Search Console",
+        status: gsc ? "live" : "error",
+        detail: gsc ? gsc.siteUrl : errors.gsc || "Search Console request failed."
       },
       {
-        name: "Paid Media",
-        channel: "Ads",
-        metric: "Awaiting sync",
-        signal: "Ad platform credentials are not connected yet.",
-        nextMove: "Watch",
-        status: "watch"
+        name: "Shopify",
+        status: "not_connected",
+        detail: "Admin token is not connected yet."
       },
       {
-        name: "Social Campaigns",
-        channel: "Social",
-        metric: "Awaiting sync",
-        signal: "Social performance is still planned for a later connector.",
-        nextMove: "Watch",
-        status: "watch"
+        name: "Paid and social",
+        status: "not_connected",
+        detail: "Ad platform connectors are not connected yet."
       }
     ],
+    metrics: [
+      { label: "Sessions", value: wholeNumber(ga4Totals.sessions), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "From GA4 Data API" : "Google Analytics did not return data" },
+      { label: "Active users", value: wholeNumber(ga4Totals.activeUsers), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "From GA4 Data API" : "Google Analytics did not return data" },
+      { label: "Events", value: wholeNumber(ga4Totals.eventCount), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "Website events in range" : "Google Analytics did not return data" },
+      { label: "Key events", value: wholeNumber(ga4Totals.conversions), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "GA4 conversion events" : "Google Analytics did not return data" },
+      { label: "Revenue", value: money(ga4Totals.purchaseRevenue), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "GA4 purchase revenue" : "Shopify/order revenue is not connected" },
+      { label: "SEO clicks", value: wholeNumber(gscTotals.clicks), delta: gsc ? "GSC" : "Missing", note: gsc ? "From Search Console" : "Search Console did not return data" },
+      { label: "SEO impressions", value: compactNumber(gscTotals.impressions), delta: gsc ? percent(gscTotals.ctr) : "Missing", note: gsc ? "Search CTR" : "Search Console did not return data" },
+      { label: "Avg position", value: gscTotals.position ? gscTotals.position.toFixed(1) : "0.0", delta: gsc ? "GSC" : "Missing", note: gsc ? "Weighted Search Console position" : "Search Console did not return data" }
+    ],
+    trend,
+    channels: buildChannelMix(ga4Totals.sessions, gscTotals.clicks, gscTotals.impressions),
+    funnel: buildFunnel(
+      gscTotals.impressions,
+      gscTotals.clicks,
+      ga4Totals.sessions,
+      ga4Totals.activeUsers,
+      ga4Totals.eventCount
+    ),
+    campaigns: (gsc?.rows || []).slice(0, 8).map((row) => ({
+      name: row.query || "Unknown search query",
+      channel: "SEO",
+      metric: `${wholeNumber(row.clicks)} clicks`,
+      signal: `${compactNumber(row.impressions)} impressions, ${percent(row.ctr)} CTR, avg position ${row.position.toFixed(1)}. ${row.page}`,
+      nextMove: row.impressions > 0 && row.ctr < 0.03 ? "Fix" : "Watch",
+      status: row.impressions > 0 && row.ctr < 0.03 ? "fix" : "watch"
+    })),
     actions: [
-      { status: "scale", title: "Scale", detail: "Use live GA4/GSC signals to identify pages with search demand and website engagement." },
-      { status: "fix", title: "Fix", detail: "Improve pages with search impressions but weak CTR or low session engagement." },
-      { status: "pause", title: "Pause", detail: "Hold paid-media decisions until ad spend and revenue are connected." },
-      { status: "watch", title: "Watch", detail: "Monitor branded search queries and product pages as more traffic accumulates." }
+      { status: "scale", title: "Scale", detail: "Use live search demand and GA4 engagement to decide which pages deserve more content or campaigns." },
+      { status: "fix", title: "Fix", detail: "Improve Search Console rows with impressions but weak CTR before spending against them." },
+      { status: "pause", title: "Hold", detail: "Do not show ROAS, CPA, ad spend, or order decisions until Shopify and paid media connectors are live." },
+      { status: "watch", title: "Watch", detail: "Monitor branded search and page engagement while traffic volume is still building." }
     ]
   };
 }
@@ -180,23 +189,26 @@ function buildLiveSummary(range: RangeKey, campaign: string, ga4: Awaited<Return
 export async function getDashboardSummary(range: RangeKey = "30d", campaign = "all"): Promise<DashboardSummary> {
   const days = rangeDays[range];
 
-  try {
-    const [ga4, gsc] = await Promise.all([
-      fetchGa4Summary(`${days}daysAgo`, "today"),
-      fetchGscSummary(daysAgo(days), daysAgo(1))
-    ]);
+  const [ga4Result, gscResult] = await Promise.allSettled([
+    fetchGa4Summary(`${days}daysAgo`, "today"),
+    fetchGscSummary(daysAgo(days), daysAgo(1))
+  ]);
 
-    return buildLiveSummary(range, campaign, ga4, gsc);
-  } catch (error) {
-    console.error(
-      "Live dashboard summary failed",
-      error instanceof Error ? { name: error.name, message: error.message } : { message: String(error) }
-    );
-
-    return {
-      ...getMockDashboardSummary(range, campaign),
-      source: "mock",
-      statusLabel: "Mock fallback"
-    };
+  if (ga4Result.status === "rejected" || gscResult.status === "rejected") {
+    console.error("Dashboard source failure", {
+      ga4: sourceError(ga4Result),
+      gsc: sourceError(gscResult)
+    });
   }
+
+  return buildSummaryFromSources(
+    range,
+    campaign,
+    ga4Result.status === "fulfilled" ? ga4Result.value : null,
+    gscResult.status === "fulfilled" ? gscResult.value : null,
+    {
+      ga4: sourceError(ga4Result),
+      gsc: sourceError(gscResult)
+    }
+  );
 }

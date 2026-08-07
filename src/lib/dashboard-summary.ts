@@ -187,7 +187,12 @@ export async function getDashboardSummary(range: RangeKey = "30d", campaign = "a
     ]);
 
     return buildLiveSummary(range, campaign, ga4, gsc);
-  } catch {
+  } catch (error) {
+    console.error(
+      "Live dashboard summary failed",
+      error instanceof Error ? { name: error.name, message: error.message } : { message: String(error) }
+    );
+
     return {
       ...getMockDashboardSummary(range, campaign),
       source: "mock",

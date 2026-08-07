@@ -179,11 +179,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">Campaign command center</p>
-                <p className="truncate text-xs text-muted-foreground">Performance workspace for ZODA growth data.</p>
+              <p className="truncate text-xs text-muted-foreground">
+                Tracking activewear demand, drops, and campaign momentum.
+              </p>
               </div>
             </div>
             <Badge variant="outline" className="border-primary/40 text-primary">
-              Internal only
+              Ascend. Conquer. Ascend.
             </Badge>
           </div>
           {children}

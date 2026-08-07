@@ -25,7 +25,7 @@ export default function LoginPage() {
                 Campaign access for the ZODA growth team.
               </h1>
               <p className="mt-5 text-sm leading-6 text-muted-foreground">
-                Review acquisition performance, channel mix, funnel movement, and next actions from one focused workspace.
+                Built around ZODA&apos;s mission to change how humans experience activewear, with performance data for drops, collections, and community growth.
               </p>
             </div>
           </div>

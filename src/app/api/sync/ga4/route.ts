@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchGa4Summary, getGa4MissingEnv } from "@/lib/ga4";
+import { persistGa4Summary } from "@/lib/sync-storage";
 
 export async function POST() {
   const missing = getGa4MissingEnv();
@@ -20,11 +21,13 @@ export async function POST() {
 
   try {
     const report = await fetchGa4Summary();
+    const storage = await persistGa4Summary(report);
 
     return NextResponse.json({
       ok: true,
       source: "GA4",
       status: "synced",
+      storage,
       report
     });
   } catch (error) {

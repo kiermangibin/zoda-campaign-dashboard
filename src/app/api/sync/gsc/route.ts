@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchGscSummary, getGscMissingEnv } from "@/lib/gsc";
+import { persistGscSummary } from "@/lib/sync-storage";
 
 export async function POST() {
   const missing = getGscMissingEnv();
@@ -20,11 +21,13 @@ export async function POST() {
 
   try {
     const report = await fetchGscSummary();
+    const storage = await persistGscSummary(report);
 
     return NextResponse.json({
       ok: true,
       source: "GSC",
       status: "synced",
+      storage,
       report
     });
   } catch (error) {

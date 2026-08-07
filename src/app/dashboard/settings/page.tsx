@@ -8,7 +8,15 @@ import { cn } from "@/lib/utils";
 const envGroups = [
   {
     title: "Google",
-    keys: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GA4_PROPERTY_ID", "GSC_SITE_URL"]
+    keys: [
+      "GOOGLE_CLIENT_ID",
+      "GOOGLE_CLIENT_SECRET",
+      "GA4_PROPERTY_ID",
+      "GA4_SERVICE_ACCOUNT_JSON",
+      "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+      "GOOGLE_PRIVATE_KEY",
+      "GSC_SITE_URL"
+    ]
   },
   {
     title: "Shopify",

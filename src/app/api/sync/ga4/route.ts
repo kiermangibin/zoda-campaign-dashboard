@@ -1,17 +1,41 @@
 import { NextResponse } from "next/server";
-import { syncNotConfigured } from "@/lib/env";
+import { fetchGa4Summary, getGa4MissingEnv } from "@/lib/ga4";
 
 export async function POST() {
-  const missing = syncNotConfigured("GA4", ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GA4_PROPERTY_ID"]);
+  const missing = getGa4MissingEnv();
 
-  if (missing) {
-    return NextResponse.json(missing, { status: 501 });
+  if (missing.length > 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        source: "GA4",
+        status: "not_configured",
+        missing,
+        message:
+          "GA4 Data API credentials are not configured. Add the missing Vercel environment variables before syncing."
+      },
+      { status: 501 }
+    );
   }
 
-  return NextResponse.json({
-    ok: false,
-    source: "GA4",
-    status: "not_implemented",
-    message: "GA4 sync contract is ready. Implement Google Analytics Data API fetch once credentials are approved."
-  }, { status: 501 });
+  try {
+    const report = await fetchGa4Summary();
+
+    return NextResponse.json({
+      ok: true,
+      source: "GA4",
+      status: "synced",
+      report
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        source: "GA4",
+        status: "sync_failed",
+        message: error instanceof Error ? error.message : "GA4 sync failed."
+      },
+      { status: 502 }
+    );
+  }
 }

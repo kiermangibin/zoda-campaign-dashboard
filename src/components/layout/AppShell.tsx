@@ -137,12 +137,18 @@ function SidebarContent() {
       { label: "Shopify", status: "token needed", tone: "text-yellow-300" },
       {
         label: "Supabase",
-        status: supabaseStatus?.connected
-          ? "connected"
-          : supabaseStatus?.configured
-            ? "check failed"
-            : "env needed",
-        tone: supabaseStatus?.connected ? "text-primary" : "text-yellow-300"
+        status: !supabaseStatus
+          ? "checking"
+          : supabaseStatus.connected
+            ? "connected"
+            : supabaseStatus.configured
+              ? "check failed"
+              : "env needed",
+        tone: !supabaseStatus
+          ? "text-muted-foreground"
+          : supabaseStatus.connected
+            ? "text-primary"
+            : "text-yellow-300"
       }
     ],
     [supabaseStatus]

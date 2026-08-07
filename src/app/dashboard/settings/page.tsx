@@ -158,7 +158,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mb-4">
-        <SyncControls />
+        <SyncControls shopifyReady={shopifyReady} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

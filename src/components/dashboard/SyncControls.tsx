@@ -15,7 +15,6 @@ type SyncTarget = {
   label: string;
   description: string;
   endpoint: string;
-  disabled?: boolean;
 };
 
 type SyncState = {
@@ -40,9 +39,8 @@ const targets: SyncTarget[] = [
   {
     source: "Shopify",
     label: "Shopify",
-    description: "Order and product sync will unlock after the Admin token is ready.",
-    endpoint: "/api/sync/shopify",
-    disabled: true
+    description: "Refresh recent order revenue and fulfillment status.",
+    endpoint: "/api/sync/shopify"
   }
 ];
 
@@ -61,11 +59,11 @@ function statusClass(status: SyncState["status"]) {
   return "border-border bg-background text-muted-foreground";
 }
 
-export function SyncControls() {
+export function SyncControls({ shopifyReady }: { shopifyReady: boolean }) {
   const [state, setState] = useState(initialState);
 
   async function runSync(target: SyncTarget) {
-    if (target.disabled) return;
+    if (target.source === "Shopify" && !shopifyReady) return;
 
     setState((current) => ({
       ...current,
@@ -126,6 +124,7 @@ export function SyncControls() {
           const itemState = state[target.source];
           const isRunning = itemState.status === "running";
           const isError = itemState.status === "error";
+          const isDisabled = target.source === "Shopify" && !shopifyReady;
 
           return (
             <div key={target.source} className="rounded-md border border-border bg-background p-3">
@@ -135,7 +134,7 @@ export function SyncControls() {
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">{target.description}</p>
                 </div>
                 <Badge variant="outline" className={cn("shrink-0", statusClass(itemState.status))}>
-                  {target.disabled ? "Disabled" : itemState.status}
+                  {isDisabled ? "Disabled" : itemState.status}
                 </Badge>
               </div>
 
@@ -154,7 +153,7 @@ export function SyncControls() {
                 )}
                 <AlertTitle>{itemState.message}</AlertTitle>
                 <AlertDescription>
-                  {target.disabled
+                  {isDisabled
                     ? "Add Shopify credentials before enabling this sync."
                     : "Runs server-side with the signed-in ZODA session."}
                 </AlertDescription>
@@ -163,8 +162,8 @@ export function SyncControls() {
               <Button
                 type="button"
                 className="mt-3 w-full"
-                variant={target.disabled ? "secondary" : "default"}
-                disabled={target.disabled || isRunning}
+                variant={isDisabled ? "secondary" : "default"}
+                disabled={isDisabled || isRunning}
                 onClick={() => void runSync(target)}
               >
                 {isRunning ? <Loader2 className="animate-spin" /> : <Play />}

@@ -1,6 +1,7 @@
 import "server-only";
 import type { Ga4Summary } from "@/lib/ga4";
 import type { GscSummary } from "@/lib/gsc";
+import type { ShopifySummary } from "@/lib/shopify";
 import { getSupabaseServerClient } from "@/lib/supabase";
 
 type SyncStorageResult = {
@@ -105,6 +106,58 @@ export async function persistGscSummary(report: GscSummary): Promise<SyncStorage
         updated_at: new Date().toISOString()
       })),
       { onConflict: "site_url,range_start,range_end,query,page" }
+    );
+
+    if (rowsError) {
+      throw new Error(rowsError.message);
+    }
+  }
+
+  return {
+    syncRunId: run.id,
+    rowCount: report.rows.length
+  };
+}
+
+export async function persistShopifySummary(report: ShopifySummary): Promise<SyncStorageResult> {
+  const supabase = requireSupabase();
+
+  const { data: run, error: runError } = await supabase
+    .from("sync_runs")
+    .insert({
+      source: "shopify",
+      status: "synced",
+      range_start: report.dateRange.startDate,
+      range_end: report.dateRange.endDate,
+      row_count: report.rows.length,
+      totals: report.totals
+    })
+    .select("id")
+    .single();
+
+  if (runError || !run) {
+    throw new Error(runError?.message || "Shopify sync run could not be recorded.");
+  }
+
+  if (report.rows.length > 0) {
+    const { error: rowsError } = await supabase.from("shopify_orders").upsert(
+      report.rows.map((row) => ({
+        shop_domain: report.storeDomain,
+        order_id: row.id,
+        order_name: row.name,
+        created_at: row.createdAt,
+        financial_status: row.financialStatus,
+        fulfillment_status: row.fulfillmentStatus,
+        total_price: row.totalPrice,
+        subtotal_price: row.subtotalPrice,
+        total_tax: row.totalTax,
+        total_shipping: row.totalShipping,
+        currency_code: row.currencyCode,
+        sync_run_id: run.id,
+        raw: row,
+        updated_at: new Date().toISOString()
+      })),
+      { onConflict: "shop_domain,order_id" }
     );
 
     if (rowsError) {

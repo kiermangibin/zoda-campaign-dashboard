@@ -27,6 +27,8 @@ GA4_PROPERTY_ID=547723633
 GA4_SERVICE_ACCOUNT_JSON=
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_PRIVATE_KEY=
+GOOGLE_WORKLOAD_IDENTITY_AUDIENCE=
+GOOGLE_IMPERSONATED_SERVICE_ACCOUNT=
 GSC_SITE_URL=sc-domain:zoda.fit
 SHOPIFY_STORE_DOMAIN=zoda-fit.myshopify.com
 SHOPIFY_ADMIN_ACCESS_TOKEN=
@@ -38,7 +40,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 `SUPABASE_SERVICE_ROLE_KEY` must stay server-only in Vercel/local env. The dashboard exposes only safe connection status through `/api/integrations/supabase/health`.
 
-For GA4 and Search Console, prefer `GA4_SERVICE_ACCOUNT_JSON` as minified JSON or base64 JSON in Vercel. As an alternative, set `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`. The service account must have access to GA4 property `547723633` and Search Console property `sc-domain:zoda.fit`.
+For GA4 and Search Console, production can use Vercel OIDC with Google Workload Identity Federation by setting `GOOGLE_WORKLOAD_IDENTITY_AUDIENCE` and `GOOGLE_IMPERSONATED_SERVICE_ACCOUNT`. Static service account credentials still work as a local fallback via `GA4_SERVICE_ACCOUNT_JSON`, or `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`. The service account must have access to GA4 property `547723633` and Search Console property `sc-domain:zoda.fit`.
 
 ## Routes
 

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
+  CheckCircle2,
   CircleDot,
   Database,
   Gauge,
@@ -16,8 +18,10 @@ import {
   UserRound
 } from "lucide-react";
 import { ZodaMark } from "@/components/brand/ZodaMark";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -28,6 +32,13 @@ const navItems = [
   { href: "/dashboard/channels", label: "Channels", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
 ];
+
+type SupabaseStatus = {
+  configured: boolean;
+  connected: boolean;
+  message: string;
+  projectRef?: string;
+};
 
 function NavigationLinks() {
   const pathname = usePathname();
@@ -43,11 +54,17 @@ function NavigationLinks() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+              "group relative flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              isActive && "bg-muted text-foreground"
             )}
           >
-            <Icon className="h-4 w-4" />
+            <span
+              className={cn(
+                "absolute left-0 h-5 w-0.5 rounded-r bg-transparent",
+                isActive && "bg-primary"
+              )}
+            />
+            <Icon className={cn("h-4 w-4", isActive && "text-primary")} />
             {item.label}
           </Link>
         );
@@ -57,6 +74,48 @@ function NavigationLinks() {
 }
 
 function SidebarContent() {
+  const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/integrations/supabase/health")
+      .then((response) => response.json() as Promise<SupabaseStatus>)
+      .then((status) => {
+        if (mounted) setSupabaseStatus(status);
+      })
+      .catch(() => {
+        if (mounted) {
+          setSupabaseStatus({
+            configured: false,
+            connected: false,
+            message: "Supabase status unavailable."
+          });
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const sources = useMemo(
+    () => [
+      { label: "Google", status: "ready", tone: "text-primary" },
+      { label: "Shopify", status: "token needed", tone: "text-yellow-300" },
+      {
+        label: "Supabase",
+        status: supabaseStatus?.connected
+          ? "connected"
+          : supabaseStatus?.configured
+            ? "check failed"
+            : "env needed",
+        tone: supabaseStatus?.connected ? "text-primary" : "text-yellow-300"
+      }
+    ],
+    [supabaseStatus]
+  );
+
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className="px-5 py-6">
@@ -66,6 +125,9 @@ function SidebarContent() {
       </div>
 
       <div className="px-3">
+        <p className="px-3 pb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          Workspace
+        </p>
         <NavigationLinks />
       </div>
 
@@ -74,62 +136,61 @@ function SidebarContent() {
       </div>
 
       <div className="grid gap-3 p-5 pt-4">
-        <div className="rounded-lg border border-border bg-card p-3">
+        <Card size="sm" className="border-border bg-card">
+          <CardContent className="p-3">
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <ShieldCheck className="h-4 w-4 text-primary" />
               Access
             </span>
-            <Badge className="bg-primary/15 text-primary">Active</Badge>
+            <Badge className="bg-primary/15 text-primary">
+              <CheckCircle2 className="mr-1 h-3 w-3" />
+              Active
+            </Badge>
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             Google auth is limited to approved @zoda.sg accounts.
           </p>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-lg border border-border bg-card p-3">
+        <Card size="sm" className="border-border bg-card">
+          <CardContent className="p-3">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Database className="h-4 w-4 text-primary" />
             Data sources
           </div>
           <div className="mt-3 grid gap-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-foreground">
-                <CircleDot className="h-3 w-3 text-primary" />
-                Google
-              </span>
-              <span className="text-muted-foreground">ready</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-foreground">
-                <CircleDot className="h-3 w-3 text-yellow-300" />
-                Shopify
-              </span>
-              <span className="text-muted-foreground">token needed</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-foreground">
-                <CircleDot className="h-3 w-3 text-yellow-300" />
-                Supabase
-              </span>
-              <span className="text-muted-foreground">planned</span>
-            </div>
+            {sources.map((source) => (
+              <div key={source.label} className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2 text-foreground">
+                  <CircleDot className={cn("h-3 w-3", source.tone)} />
+                  {source.label}
+                </span>
+                <span className="truncate text-muted-foreground">{source.status}</span>
+              </div>
+            ))}
           </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-auto p-5">
-        <div className="rounded-lg border border-border bg-card p-3">
+        <Card size="sm" className="border-border bg-card">
+          <CardContent className="p-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <UserRound className="h-4 w-4" />
-            </span>
+            <Avatar className="h-9 w-9 rounded-md">
+              <AvatarFallback className="rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                ZD
+              </AvatarFallback>
+            </Avatar>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">ZODA team</p>
               <p className="truncate text-xs text-muted-foreground">Private workspace</p>
             </div>
           </div>
-        </div>
+          </CardContent>
+        </Card>
         <Link
           href="/login"
           className="mt-3 flex h-10 items-center justify-center gap-2 rounded-md border border-border text-sm font-medium text-foreground transition-colors hover:bg-muted"

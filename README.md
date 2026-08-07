@@ -28,8 +28,12 @@ GSC_SITE_URL=https://zoda.fit/
 SHOPIFY_STORE_DOMAIN=zoda-fit.myshopify.com
 SHOPIFY_ADMIN_ACCESS_TOKEN=
 SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` must stay server-only in Vercel/local env. The dashboard exposes only safe connection status through `/api/integrations/supabase/health`.
 
 ## Routes
 
@@ -45,6 +49,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 - `GET /api/dashboard/summary?range=30d&campaign=all`
 - `GET /api/dashboard/channels?range=30d`
 - `GET /api/dashboard/funnel?range=30d`
+- `GET /api/integrations/supabase/health`
 - `POST /api/sync/ga4`
 - `POST /api/sync/gsc`
 - `POST /api/sync/shopify`

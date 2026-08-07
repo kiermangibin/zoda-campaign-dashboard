@@ -1,4 +1,5 @@
 import { CheckCircle2, CircleAlert, CircleDot, Database, KeyRound, Search, ShoppingBag } from "lucide-react";
+import { SyncControls } from "@/components/dashboard/SyncControls";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,6 +155,10 @@ export default async function SettingsPage() {
             ) : null}
           </CardContent>
         </Card>
+      </section>
+
+      <section className="mb-4">
+        <SyncControls />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

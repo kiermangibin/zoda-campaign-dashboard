@@ -65,8 +65,8 @@ export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-0">
-        <CardTitle>Channel mix</CardTitle>
-        <p className="text-sm text-muted-foreground">Share of demand by channel.</p>
+        <CardTitle>Source mix</CardTitle>
+        <p className="text-sm text-muted-foreground">Connected source contribution in the selected window.</p>
       </CardHeader>
       <CardContent className="pt-4">
       {data.every((item) => item.share === 0) ? (
@@ -93,8 +93,11 @@ export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
       <div className="grid gap-2">
         {data.map((item) => (
           <div key={item.channel} className="flex items-center justify-between border-t border-border py-2.5">
-            <span className="text-sm font-medium text-foreground">{item.channel}</span>
-            <span className="text-sm font-semibold text-primary">{item.share}%</span>
+            <div className="min-w-0">
+              <span className="text-sm font-medium text-foreground">{item.channel}</span>
+              <p className="truncate text-xs text-muted-foreground">{item.signal}</p>
+            </div>
+            <span className="shrink-0 text-sm font-semibold text-primary">{item.share}%</span>
           </div>
         ))}
       </div>
@@ -107,8 +110,8 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-0">
-        <CardTitle>Funnel</CardTitle>
-        <p className="text-sm text-muted-foreground">Impression to order path.</p>
+        <CardTitle>Acquisition path</CardTitle>
+        <p className="text-sm text-muted-foreground">Search visibility through onsite activity and synced orders.</p>
       </CardHeader>
       <CardContent className="pt-4">
       {data.every((item) => item.value === 0) ? (

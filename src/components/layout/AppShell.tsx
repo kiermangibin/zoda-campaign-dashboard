@@ -9,11 +9,8 @@ import {
   CircleDot,
   Database,
   Gauge,
-  HelpCircle,
   Layers3,
   Menu,
-  MoreVertical,
-  Search,
   Settings,
   ShieldCheck,
   TrendingUp,
@@ -32,12 +29,6 @@ const navItems = [
   { href: "/dashboard/campaigns", label: "Campaigns", icon: TrendingUp },
   { href: "/dashboard/channels", label: "Channels", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
-];
-
-const utilityItems = [
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  { href: "/dashboard/settings", label: "Get Help", icon: HelpCircle },
-  { href: "/dashboard", label: "Search", icon: Search }
 ];
 
 type SupabaseStatus = {
@@ -267,27 +258,7 @@ function SidebarContent() {
       </div>
 
       <div className="mt-auto p-5">
-        <div className="grid gap-1 pb-3">
-          {utilityItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="flex h-9 items-center gap-3 rounded-md px-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                <Icon className="h-4 w-4 text-muted-foreground" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        <Link
-          href="/login"
-          className="flex items-center gap-3 rounded-lg bg-muted/70 p-2.5 text-left transition-colors hover:bg-muted"
-        >
+        <div className="flex items-center gap-3 rounded-md border border-border bg-muted/50 p-2.5 text-left">
           <Avatar className="h-9 w-9 rounded-md">
             <AvatarFallback className="rounded-md bg-card text-xs font-semibold text-foreground">
               {accountInitials}
@@ -297,8 +268,7 @@ function SidebarContent() {
             <p className="truncate text-sm font-semibold text-foreground">{accountName}</p>
             <p className="truncate text-xs text-muted-foreground">{accountEmail}</p>
           </div>
-          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-        </Link>
+        </div>
       </div>
     </div>
   );
@@ -334,20 +304,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <div className="mx-auto w-full max-w-[1540px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/85 px-4 py-3 shadow-sm">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-primary">
                 <Layers3 className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">Campaign command center</p>
-              <p className="truncate text-xs text-muted-foreground">
-                Tracking activewear demand, drops, and campaign momentum.
-              </p>
+                <p className="text-sm font-semibold text-foreground">ZODA Analytics</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  Traffic, search, and order performance
+                </p>
               </div>
             </div>
             <Badge variant="outline" className="border-primary/40 text-primary">
-              Ascend. Conquer. Ascend.
+              Live data
             </Badge>
           </div>
           {children}

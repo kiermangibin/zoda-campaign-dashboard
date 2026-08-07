@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionNotes } from "@/components/dashboard/ActionNotes";
 import { CampaignTable } from "@/components/dashboard/CampaignTable";
 import { ChannelMix, FunnelChart, TrendChart } from "@/components/dashboard/Charts";
 import { Filters } from "@/components/dashboard/Filters";
@@ -14,7 +13,6 @@ import { cn } from "@/lib/utils";
 
 export function DashboardClient() {
   const [range, setRange] = useState<RangeKey>("30d");
-  const [campaign, setCampaign] = useState("all");
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,7 +23,7 @@ export function DashboardClient() {
       setIsLoading(true);
 
       try {
-        const params = new URLSearchParams({ range, campaign });
+        const params = new URLSearchParams({ range });
         const response = await fetch(`/api/dashboard/summary?${params.toString()}`, {
           signal: controller.signal
         });
@@ -49,7 +47,7 @@ export function DashboardClient() {
     void loadSummary();
 
     return () => controller.abort();
-  }, [range, campaign]);
+  }, [range]);
 
   const sourceStyles = {
     live: {
@@ -70,11 +68,11 @@ export function DashboardClient() {
   } as const;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-primary/40 text-primary">Live overview</Badge>
+            <Badge variant="outline" className="border-primary/40 text-primary">Overview</Badge>
             <span className="text-xs text-muted-foreground">
               {isLoading ? "Syncing live data" : data?.statusLabel || "Dashboard data"}
             </span>
@@ -83,14 +81,12 @@ export function DashboardClient() {
             ZODA performance
           </h1>
           <p className="mt-2 max-w-[720px] text-sm leading-6 text-muted-foreground">
-            Real GA4 website activity and Search Console demand. Paid media, social, and Shopify stay marked as disconnected until their APIs are wired.
+            Connected GA4, Search Console, and Shopify signals for traffic, search demand, and order performance.
           </p>
         </div>
         <Filters
           range={range}
-          campaign={campaign}
           onRangeChange={setRange}
-          onCampaignChange={setCampaign}
         />
       </section>
 
@@ -105,7 +101,7 @@ export function DashboardClient() {
           <MetricCards metrics={data.metrics} />
 
           {data.dataSources ? (
-            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Data source status">
+            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Data coverage">
               {data.dataSources.map((source) => {
                 const style = sourceStyles[source.status];
                 const Icon = style.icon;
@@ -139,20 +135,8 @@ export function DashboardClient() {
 
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
             <CampaignTable campaigns={data.campaigns} />
-            <div className="grid gap-4">
-              <FunnelChart data={data.funnel} />
-              <Card className="border-border bg-card">
-                <CardContent className="p-4">
-                  <p className="text-sm font-semibold text-foreground">Current focus</p>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    The live view is limited to connected sources. Shopify/order data and paid/social spend will appear only after those connectors are added.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <FunnelChart data={data.funnel} />
           </section>
-
-          <ActionNotes actions={data.actions} />
         </>
       )}
     </div>

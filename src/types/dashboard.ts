@@ -1,6 +1,6 @@
 export type RangeKey = "7d" | "30d" | "90d";
 
-export type DashboardChannel = "Ads" | "Social" | "SEO" | "Website";
+export type DashboardChannel = "SEO" | "Website" | "Shopify";
 
 export type ActionStatus = "scale" | "fix" | "pause" | "watch";
 
@@ -45,12 +45,6 @@ export interface CampaignRow {
   status: ActionStatus;
 }
 
-export interface ActionNote {
-  status: ActionStatus;
-  title: string;
-  detail: string;
-}
-
 export interface DashboardSummary {
   range: RangeKey;
   campaign: string;
@@ -70,5 +64,4 @@ export interface DashboardSummary {
   channels: ChannelPerformance[];
   funnel: FunnelStep[];
   campaigns: CampaignRow[];
-  actions: ActionNote[];
 }

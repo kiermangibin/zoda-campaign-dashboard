@@ -1,38 +1,43 @@
 "use client";
 
 import type { RangeKey } from "@/types/dashboard";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface FiltersProps {
   range: RangeKey;
-  campaign: string;
   onRangeChange: (range: RangeKey) => void;
-  onCampaignChange: (campaign: string) => void;
 }
 
-export function Filters({ range, campaign, onRangeChange, onCampaignChange }: FiltersProps) {
+const ranges: Array<{ label: string; value: RangeKey }> = [
+  { label: "7D", value: "7d" },
+  { label: "30D", value: "30d" },
+  { label: "90D", value: "90d" }
+];
+
+export function Filters({ range, onRangeChange }: FiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <select
-        value={range}
-        onChange={(event) => onRangeChange(event.target.value as RangeKey)}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
-        aria-label="Date range"
-      >
-        <option value="7d">Last 7 days</option>
-        <option value="30d">Last 30 days</option>
-        <option value="90d">Last 90 days</option>
-      </select>
-      <select
-        value={campaign}
-        onChange={(event) => onCampaignChange(event.target.value)}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
-        aria-label="Campaign"
-      >
-        <option value="all">All campaigns</option>
-        <option value="core">Core performance</option>
-        <option value="mab">Mission Athlete Bag</option>
-        <option value="seo">SEO growth</option>
-      </select>
+    <div className="flex rounded-md border border-border bg-card p-1" aria-label="Date range">
+      {ranges.map((item) => {
+        const isActive = item.value === range;
+
+        return (
+          <Button
+            key={item.value}
+            type="button"
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "h-7 px-3 text-xs",
+              isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground"
+            )}
+            aria-pressed={isActive}
+            onClick={() => onRangeChange(item.value)}
+          >
+            {item.label}
+          </Button>
+        );
+      })}
     </div>
   );
 }

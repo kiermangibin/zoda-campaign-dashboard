@@ -1,6 +1,8 @@
 import "server-only";
 import { fetchGa4Summary } from "@/lib/ga4";
 import { fetchGscSummary } from "@/lib/gsc";
+import { getShopifyConnectionStatus } from "@/lib/shopify";
+import { getSupabaseServerClient } from "@/lib/supabase";
 import type { ChannelPerformance, DashboardSummary, FunnelStep, RangeKey, TrendPoint } from "@/types/dashboard";
 
 const rangeDays: Record<RangeKey, number> = {
@@ -43,10 +45,71 @@ function share(value: number, base: number) {
   return base > 0 ? Math.round((value / base) * 100) : 0;
 }
 
-function buildChannelMix(ga4Sessions: number, gscClicks: number, gscImpressions: number): ChannelPerformance[] {
-  const demand = ga4Sessions + gscClicks;
+type ShopifySnapshot = {
+  connected: boolean;
+  orders: number;
+  revenue: number;
+  currencyCode: string;
+  error?: string;
+};
 
-  return [
+async function fetchStoredShopifySnapshot(startDate: string): Promise<ShopifySnapshot> {
+  const status = await getShopifyConnectionStatus();
+
+  if (!status.connected || !status.storeDomain) {
+    return {
+      connected: false,
+      orders: 0,
+      revenue: 0,
+      currencyCode: "SGD"
+    };
+  }
+
+  const supabase = getSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      connected: true,
+      orders: 0,
+      revenue: 0,
+      currencyCode: "SGD",
+      error: "Supabase storage is not configured."
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("shopify_orders")
+    .select("total_price,currency_code")
+    .eq("shop_domain", status.storeDomain)
+    .gte("created_at", `${startDate}T00:00:00.000Z`);
+
+  if (error) {
+    return {
+      connected: true,
+      orders: 0,
+      revenue: 0,
+      currencyCode: "SGD",
+      error: error.message
+    };
+  }
+
+  return {
+    connected: true,
+    orders: data?.length ?? 0,
+    revenue: (data || []).reduce((sum, row) => sum + Number(row.total_price || 0), 0),
+    currencyCode: data?.[0]?.currency_code || "SGD"
+  };
+}
+
+function buildChannelMix(
+  ga4Sessions: number,
+  gscClicks: number,
+  gscImpressions: number,
+  shopify: ShopifySnapshot
+): ChannelPerformance[] {
+  const demand = ga4Sessions + gscClicks + shopify.orders;
+
+  const channels: ChannelPerformance[] = [
     {
       channel: "SEO",
       share: share(gscClicks, demand),
@@ -66,17 +129,39 @@ function buildChannelMix(ga4Sessions: number, gscClicks: number, gscImpressions:
       revenue: 0,
       signal: `${wholeNumber(ga4Sessions)} sessions recorded in GA4.`,
       nextMove: "Use GA4 events to identify product and checkout drop-offs."
+    },
+    {
+      channel: "Shopify",
+      share: share(shopify.orders, demand),
+      spend: 0,
+      clicks: shopify.orders,
+      conversions: shopify.orders,
+      revenue: shopify.revenue,
+      signal: shopify.connected
+        ? `${wholeNumber(shopify.orders)} synced orders, ${money(shopify.revenue)} revenue.`
+        : "Shopify is not connected.",
+      nextMove: shopify.connected ? "Review synced orders against campaign traffic." : "Connect Shopify from Settings."
     }
   ];
+
+  return channels.filter((channel) => channel.channel !== "Shopify" || shopify.connected);
 }
 
-function buildFunnel(impressions: number, clicks: number, sessions: number, activeUsers: number, events: number): FunnelStep[] {
+function buildFunnel(
+  impressions: number,
+  clicks: number,
+  sessions: number,
+  activeUsers: number,
+  events: number,
+  orders: number
+): FunnelStep[] {
   return [
     { label: "Search impressions", value: impressions, rate: 100 },
     { label: "SEO clicks", value: clicks, rate: rate(clicks, impressions) },
     { label: "Sessions", value: sessions, rate: rate(sessions, Math.max(clicks, 1)) },
     { label: "Active users", value: activeUsers, rate: rate(activeUsers, Math.max(sessions, 1)) },
-    { label: "Events", value: events, rate: rate(events, Math.max(activeUsers, 1)) }
+    { label: "Events", value: events, rate: rate(events, Math.max(activeUsers, 1)) },
+    { label: "Shopify orders", value: orders, rate: rate(orders, Math.max(activeUsers, 1)) }
   ];
 }
 
@@ -93,6 +178,7 @@ function buildSummaryFromSources(
   campaign: string,
   ga4: Ga4Result | null,
   gsc: GscResult | null,
+  shopify: ShopifySnapshot,
   errors: { ga4?: string; gsc?: string }
 ): DashboardSummary {
   const trend: TrendPoint[] = (ga4?.rows || []).map((row) => ({
@@ -116,14 +202,14 @@ function buildSummaryFromSources(
     ctr: 0,
     position: 0
   };
-  const hasAnyLiveSource = Boolean(ga4 || gsc);
-  const hasAllLiveSources = Boolean(ga4 && gsc);
+  const hasAnyLiveSource = Boolean(ga4 || gsc || shopify.connected);
+  const hasAllCoreSources = Boolean(ga4 && gsc && shopify.connected);
 
   return {
     range,
     campaign,
-    source: hasAllLiveSources ? "live" : hasAnyLiveSource ? "partial" : "unavailable",
-    statusLabel: hasAllLiveSources ? "Live GA4 + GSC" : hasAnyLiveSource ? "Partial live data" : "No live data available",
+    source: hasAllCoreSources ? "live" : hasAnyLiveSource ? "partial" : "unavailable",
+    statusLabel: hasAllCoreSources ? "Live GA4 + GSC + Shopify" : hasAnyLiveSource ? "Partial live data" : "No live data available",
     dateRange: {
       startDate: ga4?.dateRange.startDate || gsc?.dateRange.startDate || "",
       endDate: ga4?.dateRange.endDate || gsc?.dateRange.endDate || ""
@@ -141,8 +227,10 @@ function buildSummaryFromSources(
       },
       {
         name: "Shopify",
-        status: "not_connected",
-        detail: "Admin token is not connected yet."
+        status: shopify.error ? "error" : shopify.connected ? "live" : "not_connected",
+        detail: shopify.connected
+          ? shopify.error || `${wholeNumber(shopify.orders)} synced orders in this range`
+          : "Connect Shopify from Settings."
       },
       {
         name: "Paid and social",
@@ -153,21 +241,31 @@ function buildSummaryFromSources(
     metrics: [
       { label: "Sessions", value: wholeNumber(ga4Totals.sessions), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "From GA4 Data API" : "Google Analytics did not return data" },
       { label: "Active users", value: wholeNumber(ga4Totals.activeUsers), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "From GA4 Data API" : "Google Analytics did not return data" },
-      { label: "Events", value: wholeNumber(ga4Totals.eventCount), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "Website events in range" : "Google Analytics did not return data" },
       { label: "Key events", value: wholeNumber(ga4Totals.conversions), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "GA4 conversion events" : "Google Analytics did not return data" },
-      { label: "Revenue", value: money(ga4Totals.purchaseRevenue), delta: ga4 ? "GA4" : "Missing", note: ga4 ? "GA4 purchase revenue" : "Shopify/order revenue is not connected" },
       { label: "SEO clicks", value: wholeNumber(gscTotals.clicks), delta: gsc ? "GSC" : "Missing", note: gsc ? "From Search Console" : "Search Console did not return data" },
       { label: "SEO impressions", value: compactNumber(gscTotals.impressions), delta: gsc ? percent(gscTotals.ctr) : "Missing", note: gsc ? "Search CTR" : "Search Console did not return data" },
-      { label: "Avg position", value: gscTotals.position ? gscTotals.position.toFixed(1) : "0.0", delta: gsc ? "GSC" : "Missing", note: gsc ? "Weighted Search Console position" : "Search Console did not return data" }
+      {
+        label: "Shopify orders",
+        value: wholeNumber(shopify.orders),
+        delta: shopify.connected ? "Shopify" : "Missing",
+        note: shopify.connected ? "Synced order rows in range" : "Shopify is not connected"
+      },
+      {
+        label: "Order revenue",
+        value: money(shopify.revenue || ga4Totals.purchaseRevenue),
+        delta: shopify.connected ? "Shopify" : ga4 ? "GA4" : "Missing",
+        note: shopify.connected ? "From synced Shopify orders" : "Fallback GA4 purchase revenue"
+      }
     ],
     trend,
-    channels: buildChannelMix(ga4Totals.sessions, gscTotals.clicks, gscTotals.impressions),
+    channels: buildChannelMix(ga4Totals.sessions, gscTotals.clicks, gscTotals.impressions, shopify),
     funnel: buildFunnel(
       gscTotals.impressions,
       gscTotals.clicks,
       ga4Totals.sessions,
       ga4Totals.activeUsers,
-      ga4Totals.eventCount
+      ga4Totals.eventCount,
+      shopify.orders
     ),
     campaigns: (gsc?.rows || []).slice(0, 8).map((row) => ({
       name: row.query || "Unknown search query",
@@ -176,13 +274,7 @@ function buildSummaryFromSources(
       signal: `${compactNumber(row.impressions)} impressions, ${percent(row.ctr)} CTR, avg position ${row.position.toFixed(1)}. ${row.page}`,
       nextMove: row.impressions > 0 && row.ctr < 0.03 ? "Fix" : "Watch",
       status: row.impressions > 0 && row.ctr < 0.03 ? "fix" : "watch"
-    })),
-    actions: [
-      { status: "scale", title: "Scale", detail: "Use live search demand and GA4 engagement to decide which pages deserve more content or campaigns." },
-      { status: "fix", title: "Fix", detail: "Improve Search Console rows with impressions but weak CTR before spending against them." },
-      { status: "pause", title: "Hold", detail: "Do not show ROAS, CPA, ad spend, or order decisions until Shopify and paid media connectors are live." },
-      { status: "watch", title: "Watch", detail: "Monitor branded search and page engagement while traffic volume is still building." }
-    ]
+    }))
   };
 }
 
@@ -193,6 +285,7 @@ export async function getDashboardSummary(range: RangeKey = "30d", campaign = "a
     fetchGa4Summary(`${days}daysAgo`, "today"),
     fetchGscSummary(daysAgo(days), daysAgo(1))
   ]);
+  const shopify = await fetchStoredShopifySnapshot(daysAgo(days));
 
   if (ga4Result.status === "rejected" || gscResult.status === "rejected") {
     console.error("Dashboard source failure", {
@@ -206,6 +299,7 @@ export async function getDashboardSummary(range: RangeKey = "30d", campaign = "a
     campaign,
     ga4Result.status === "fulfilled" ? ga4Result.value : null,
     gscResult.status === "fulfilled" ? gscResult.value : null,
+    shopify,
     {
       ga4: sourceError(ga4Result),
       gsc: sourceError(gscResult)

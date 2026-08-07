@@ -21,8 +21,8 @@ export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-0">
-        <CardTitle>Search opportunities</CardTitle>
-        <p className="text-sm text-muted-foreground">Live Search Console query and page rows ranked by current demand.</p>
+        <CardTitle>Search demand</CardTitle>
+        <p className="text-sm text-muted-foreground">Search Console query and page rows ranked by current demand.</p>
       </CardHeader>
       <CardContent className="pt-4">
         {campaigns.length === 0 ? (
@@ -35,17 +35,15 @@ export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
           <TableHeader className="bg-muted/40">
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="px-3 text-xs text-muted-foreground">Query</TableHead>
-              <TableHead className="px-3 text-xs text-muted-foreground">Channel</TableHead>
               <TableHead className="px-3 text-xs text-muted-foreground">Metric</TableHead>
               <TableHead className="px-3 text-xs text-muted-foreground">Page signal</TableHead>
-              <TableHead className="px-3 text-xs text-muted-foreground">Next move</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {campaigns.map((campaign) => (
-              <TableRow key={campaign.name} className="border-border align-top">
+              <TableRow key={`${campaign.name}-${campaign.signal}`} className="border-border align-top">
                 <TableCell className="px-3 py-3 font-medium text-foreground">{campaign.name}</TableCell>
-                <TableCell className="px-3 py-3 text-muted-foreground">{campaign.channel}</TableCell>
                 <TableCell className="px-3 py-3 font-semibold text-primary">{campaign.metric}</TableCell>
                 <TableCell className="max-w-[280px] whitespace-normal px-3 py-3 leading-6 text-muted-foreground">
                   {campaign.signal}

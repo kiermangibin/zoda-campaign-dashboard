@@ -81,14 +81,9 @@ export default async function SettingsPage() {
       keys: [
         { name: "SHOPIFY_STORE_DOMAIN", detail: "Storefront host", configured: hasEnv("SHOPIFY_STORE_DOMAIN") },
         { name: "SHOPIFY_CLIENT_ID", detail: "OAuth app", configured: hasEnv("SHOPIFY_CLIENT_ID") },
-        { name: "SHOPIFY_CLIENT_SECRET", detail: "Server-only OAuth secret", configured: hasEnv("SHOPIFY_CLIENT_SECRET") },
-        {
-          name: "SHOPIFY_ADMIN_ACCESS_TOKEN",
-          detail: "Optional direct token fallback",
-          configured: hasEnv("SHOPIFY_ADMIN_ACCESS_TOKEN")
-        }
+        { name: "SHOPIFY_CLIENT_SECRET", detail: "Server-only OAuth secret", configured: hasEnv("SHOPIFY_CLIENT_SECRET") }
       ],
-      note: shopifyStatus.message
+      note: shopifyReady ? shopifyStatus.message : "Complete Shopify OAuth before running order syncs."
     },
     {
       title: "Supabase",
@@ -109,7 +104,9 @@ export default async function SettingsPage() {
           configured: hasEnv("NEXT_PUBLIC_SUPABASE_URL")
         }
       ],
-      note: supabaseStatus.message
+      note: supabaseStatus.connected
+        ? supabaseStatus.message
+        : "Connect Supabase before storing synchronized source snapshots."
     }
   ];
 
@@ -117,54 +114,10 @@ export default async function SettingsPage() {
     <AppShell>
       <section className="mb-5">
         <Badge variant="outline" className="border-primary/40 text-primary">Settings</Badge>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">Data source readiness</h1>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">Integrations</h1>
         <p className="mt-2 max-w-[760px] text-sm leading-6 text-muted-foreground">
-          Keep secrets in Vercel only. This page documents what the dashboard expects before each sync route is enabled.
+          Connection status and manual sync controls for the sources powering the dashboard.
         </p>
-      </section>
-
-      <section className="mb-4">
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle>Supabase connection</CardTitle>
-                <CardDescription>
-                  Server-side service role status for persistence and future sync jobs.
-                </CardDescription>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "gap-1.5",
-                  supabaseStatus.connected
-                    ? "border-primary/40 text-primary"
-                    : "border-yellow-300/40 text-yellow-300"
-                )}
-              >
-                {supabaseStatus.connected ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                ) : (
-                  <CircleAlert className="h-3.5 w-3.5" />
-                )}
-                {supabaseStatus.connected ? "Connected" : "Needs env"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-3 text-sm md:grid-cols-[1fr_auto] md:items-end">
-            <div>
-              <p className="text-muted-foreground">{supabaseStatus.message}</p>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                Google live reporting is already wired through Vercel OIDC. Supabase is the next persistence step.
-              </p>
-            </div>
-            {supabaseStatus.projectRef ? (
-              <div className="rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground">
-                project: {supabaseStatus.projectRef}
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
       </section>
 
       <section className="mb-4">

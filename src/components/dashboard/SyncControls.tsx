@@ -44,11 +44,11 @@ const targets: SyncTarget[] = [
   }
 ];
 
-function initialState(): Record<SyncSource, SyncState> {
+function initialState(shopifyReady: boolean): Record<SyncSource, SyncState> {
   return {
     GA4: { status: "idle", message: "Ready to sync" },
     GSC: { status: "idle", message: "Ready to sync" },
-    Shopify: { status: "idle", message: "Not connected" }
+    Shopify: { status: "idle", message: shopifyReady ? "Ready to sync" : "Not connected" }
   };
 }
 
@@ -66,7 +66,7 @@ export function SyncControls({
   shopifyReady: boolean;
   shopifyConfigured: boolean;
 }) {
-  const [state, setState] = useState(initialState);
+  const [state, setState] = useState(() => initialState(shopifyReady));
 
   async function runSync(target: SyncTarget) {
     if (target.source === "Shopify" && !shopifyReady) return;

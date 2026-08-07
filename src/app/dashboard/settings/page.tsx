@@ -4,7 +4,10 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { checkSupabaseConnection } from "@/lib/supabase";
+import { getShopifyConnectionStatus } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 type ReadinessState = "live" | "ready" | "needs-env" | "pending";
 
@@ -41,7 +44,8 @@ export default async function SettingsPage() {
     hasEnv("GSC_SITE_URL") &&
     hasEnv("GOOGLE_WORKLOAD_IDENTITY_AUDIENCE") &&
     hasEnv("GOOGLE_IMPERSONATED_SERVICE_ACCOUNT");
-  const shopifyReady = hasEnv("SHOPIFY_STORE_DOMAIN") && hasEnv("SHOPIFY_ADMIN_ACCESS_TOKEN");
+  const shopifyStatus = await getShopifyConnectionStatus();
+  const shopifyReady = shopifyStatus.connected;
 
   const dataSources: DataSourceCard[] = [
     {
@@ -76,9 +80,15 @@ export default async function SettingsPage() {
       icon: ShoppingBag,
       keys: [
         { name: "SHOPIFY_STORE_DOMAIN", detail: "Storefront host", configured: hasEnv("SHOPIFY_STORE_DOMAIN") },
-        { name: "SHOPIFY_ADMIN_ACCESS_TOKEN", detail: "Admin API token", configured: hasEnv("SHOPIFY_ADMIN_ACCESS_TOKEN") }
+        { name: "SHOPIFY_CLIENT_ID", detail: "OAuth app", configured: hasEnv("SHOPIFY_CLIENT_ID") },
+        { name: "SHOPIFY_CLIENT_SECRET", detail: "Server-only OAuth secret", configured: hasEnv("SHOPIFY_CLIENT_SECRET") },
+        {
+          name: "SHOPIFY_ADMIN_ACCESS_TOKEN",
+          detail: "Optional direct token fallback",
+          configured: hasEnv("SHOPIFY_ADMIN_ACCESS_TOKEN")
+        }
       ],
-      note: "Sync route is present, but product/order sync still needs final API scopes and storage."
+      note: shopifyStatus.message
     },
     {
       title: "Supabase",
@@ -158,7 +168,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mb-4">
-        <SyncControls shopifyReady={shopifyReady} />
+        <SyncControls shopifyReady={shopifyReady} shopifyConfigured={shopifyStatus.configured} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">

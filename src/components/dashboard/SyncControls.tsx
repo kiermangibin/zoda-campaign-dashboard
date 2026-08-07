@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, Play, TriangleAlert } from "lucide-react";
+import { CheckCircle2, Loader2, Play, ShieldCheck, TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,13 @@ function statusClass(status: SyncState["status"]) {
   return "border-border bg-background text-muted-foreground";
 }
 
-export function SyncControls({ shopifyReady }: { shopifyReady: boolean }) {
+export function SyncControls({
+  shopifyReady,
+  shopifyConfigured
+}: {
+  shopifyReady: boolean;
+  shopifyConfigured: boolean;
+}) {
   const [state, setState] = useState(initialState);
 
   async function runSync(target: SyncTarget) {
@@ -124,6 +130,7 @@ export function SyncControls({ shopifyReady }: { shopifyReady: boolean }) {
           const itemState = state[target.source];
           const isRunning = itemState.status === "running";
           const isError = itemState.status === "error";
+          const isShopifyPending = target.source === "Shopify" && !shopifyReady;
           const isDisabled = target.source === "Shopify" && !shopifyReady;
 
           return (
@@ -154,21 +161,30 @@ export function SyncControls({ shopifyReady }: { shopifyReady: boolean }) {
                 <AlertTitle>{itemState.message}</AlertTitle>
                 <AlertDescription>
                   {isDisabled
-                    ? "Add Shopify credentials before enabling this sync."
+                    ? shopifyConfigured
+                      ? "Install the Shopify app to grant Admin API access."
+                      : "Add Shopify app credentials before enabling this sync."
                     : "Runs server-side with the signed-in ZODA session."}
                 </AlertDescription>
               </Alert>
 
-              <Button
-                type="button"
-                className="mt-3 w-full"
-                variant={isDisabled ? "secondary" : "default"}
-                disabled={isDisabled || isRunning}
-                onClick={() => void runSync(target)}
-              >
-                {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
-                Sync {target.label}
-              </Button>
+              {isShopifyPending && shopifyConfigured ? (
+                <a className={cn(buttonVariants(), "mt-3 w-full")} href="/api/shopify/install">
+                  <ShieldCheck />
+                  Connect Shopify
+                </a>
+              ) : (
+                <Button
+                  type="button"
+                  className="mt-3 w-full"
+                  variant={isDisabled ? "secondary" : "default"}
+                  disabled={isDisabled || isRunning}
+                  onClick={() => void runSync(target)}
+                >
+                  {isRunning ? <Loader2 className="animate-spin" /> : <Play />}
+                  Sync {target.label}
+                </Button>
+              )}
             </div>
           );
         })}

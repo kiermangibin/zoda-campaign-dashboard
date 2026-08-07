@@ -54,6 +54,8 @@ export interface ActionNote {
 export interface DashboardSummary {
   range: RangeKey;
   campaign: string;
+  source?: "live" | "mock";
+  statusLabel?: string;
   metrics: MetricCard[];
   trend: TrendPoint[];
   channels: ChannelPerformance[];

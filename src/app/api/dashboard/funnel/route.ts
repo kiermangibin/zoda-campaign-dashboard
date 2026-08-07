@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { getDashboardSummary } from "@/data/mock-dashboard";
+import { getDashboardSummary } from "@/lib/dashboard-summary";
 
-export function GET() {
+export async function GET() {
+  const summary = await getDashboardSummary();
+
   return NextResponse.json({
     ok: true,
-    funnel: getDashboardSummary().funnel
+    source: summary.source,
+    funnel: summary.funnel
   });
 }

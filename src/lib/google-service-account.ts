@@ -1,4 +1,5 @@
 import "server-only";
+import { getVercelOidcToken } from "@vercel/oidc";
 import { createSign } from "crypto";
 import { readFile } from "fs/promises";
 
@@ -38,9 +39,7 @@ export function getGoogleServiceAccountMissingEnv() {
 
   if (hasInlineCredentials || hasApplicationCredentials) return [];
 
-  if (hasWorkloadIdentity) {
-    return process.env.VERCEL_OIDC_TOKEN ? [] : ["VERCEL_OIDC_TOKEN"];
-  }
+  if (hasWorkloadIdentity) return [];
 
   return ["GA4_SERVICE_ACCOUNT_JSON"];
 }
@@ -94,8 +93,7 @@ function createServiceAccountAssertion(credentials: ServiceAccountCredentials, s
 export async function getGoogleAccessToken(scope: string) {
   if (
     process.env.GOOGLE_WORKLOAD_IDENTITY_AUDIENCE &&
-    process.env.GOOGLE_IMPERSONATED_SERVICE_ACCOUNT &&
-    process.env.VERCEL_OIDC_TOKEN
+    process.env.GOOGLE_IMPERSONATED_SERVICE_ACCOUNT
   ) {
     return getWorkloadIdentityAccessToken(scope);
   }
@@ -122,13 +120,14 @@ export async function getGoogleAccessToken(scope: string) {
 }
 
 async function getWorkloadIdentityAccessToken(scope: string) {
+  const oidcToken = process.env.VERCEL_OIDC_TOKEN || (await getVercelOidcToken());
   const federationBody = new URLSearchParams({
     grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
     audience: process.env.GOOGLE_WORKLOAD_IDENTITY_AUDIENCE!,
     scope: "https://www.googleapis.com/auth/cloud-platform",
     requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
     subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
-    subject_token: process.env.VERCEL_OIDC_TOKEN!
+    subject_token: oidcToken
   });
   const federationResponse = await fetch(stsTokenUrl, {
     method: "POST",

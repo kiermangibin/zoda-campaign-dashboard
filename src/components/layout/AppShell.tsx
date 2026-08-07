@@ -47,6 +47,12 @@ type SupabaseStatus = {
   projectRef?: string;
 };
 
+type ShopifyStatus = {
+  configured: boolean;
+  connected: boolean;
+  message: string;
+};
+
 type AuthSession = {
   user?: {
     name?: string | null;
@@ -89,6 +95,7 @@ function NavigationLinks() {
 
 function SidebarContent() {
   const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus | null>(null);
+  const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
 
   useEffect(() => {
@@ -105,6 +112,29 @@ function SidebarContent() {
             configured: false,
             connected: false,
             message: "Supabase status unavailable."
+          });
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/integrations/shopify/health")
+      .then((response) => response.json() as Promise<ShopifyStatus>)
+      .then((status) => {
+        if (mounted) setShopifyStatus(status);
+      })
+      .catch(() => {
+        if (mounted) {
+          setShopifyStatus({
+            configured: false,
+            connected: false,
+            message: "Shopify status unavailable."
           });
         }
       });
@@ -134,7 +164,21 @@ function SidebarContent() {
   const sources = useMemo(
     () => [
       { label: "Google", status: "ready", tone: "text-primary" },
-      { label: "Shopify", status: "token needed", tone: "text-yellow-300" },
+      {
+        label: "Shopify",
+        status: !shopifyStatus
+          ? "checking"
+          : shopifyStatus.connected
+            ? "connected"
+            : shopifyStatus.configured
+              ? "install needed"
+              : "env needed",
+        tone: !shopifyStatus
+          ? "text-muted-foreground"
+          : shopifyStatus.connected
+            ? "text-primary"
+            : "text-yellow-300"
+      },
       {
         label: "Supabase",
         status: !supabaseStatus
@@ -151,7 +195,7 @@ function SidebarContent() {
             : "text-yellow-300"
       }
     ],
-    [supabaseStatus]
+    [shopifyStatus, supabaseStatus]
   );
 
   const accountName = session?.user?.name || "ZODA team";

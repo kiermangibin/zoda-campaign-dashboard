@@ -8,11 +8,14 @@ import {
   Database,
   Gauge,
   Layers3,
+  LogIn,
   Menu,
   Settings,
   ShieldCheck,
-  TrendingUp
+  TrendingUp,
+  UserRound
 } from "lucide-react";
+import { ZodaMark } from "@/components/brand/ZodaMark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -56,15 +59,9 @@ function NavigationLinks() {
 function SidebarContent() {
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="p-5">
-        <Link href="/dashboard" className="flex items-center gap-3" aria-label="ZODA dashboard home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-black text-primary-foreground">
-            Z
-          </span>
-          <span>
-            <span className="block text-base font-semibold leading-none text-foreground">ZODA</span>
-            <span className="mt-1 block text-xs text-muted-foreground">Campaign dashboard</span>
-          </span>
+      <div className="px-5 py-6">
+        <Link href="/dashboard" aria-label="ZODA dashboard home">
+          <ZodaMark />
         </Link>
       </div>
 
@@ -76,7 +73,7 @@ function SidebarContent() {
         <Separator />
       </div>
 
-      <div className="grid gap-3 p-5">
+      <div className="grid gap-3 p-5 pt-4">
         <div className="rounded-lg border border-border bg-card p-3">
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -122,11 +119,23 @@ function SidebarContent() {
       </div>
 
       <div className="mt-auto p-5">
+        <div className="rounded-lg border border-border bg-card p-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <UserRound className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">ZODA team</p>
+              <p className="truncate text-xs text-muted-foreground">Private workspace</p>
+            </div>
+          </div>
+        </div>
         <Link
           href="/login"
-          className="flex h-10 items-center justify-center rounded-md border border-border text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="mt-3 flex h-10 items-center justify-center gap-2 rounded-md border border-border text-sm font-medium text-foreground transition-colors hover:bg-muted"
         >
-          Account
+          <LogIn className="h-4 w-4" />
+          Account access
         </Link>
       </div>
     </div>
@@ -143,11 +152,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="lg:pl-[280px]">
         <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur lg:hidden">
           <div className="flex h-14 items-center justify-between px-4">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-xs font-black text-primary-foreground">
-                Z
-              </span>
-              <span className="text-sm font-semibold">ZODA</span>
+            <Link href="/dashboard" aria-label="ZODA dashboard home">
+              <ZodaMark compact />
             </Link>
             <Sheet>
               <SheetTrigger
@@ -166,14 +172,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <div className="mx-auto w-full max-w-[1540px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card/85 px-4 py-3 shadow-sm">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
                 <Layers3 className="h-4 w-4" />
               </span>
-              <div>
-                <p className="text-sm font-semibold">Campaign command center</p>
-                <p className="text-xs text-muted-foreground">Mock layer now, live integrations next.</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Campaign command center</p>
+                <p className="truncate text-xs text-muted-foreground">Performance workspace for ZODA growth data.</p>
               </div>
             </div>
             <Badge variant="outline" className="border-primary/40 text-primary">

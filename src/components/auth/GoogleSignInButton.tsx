@@ -1,15 +1,18 @@
 "use client";
 
+import { LogIn } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 
 export function GoogleSignInButton() {
   return (
-    <button
+    <Button
       type="button"
       onClick={() => void signIn("google", { callbackUrl: "/dashboard" })}
-      className="bg-zoda-mint px-5 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-zoda-black"
+      className="h-11 w-full justify-center gap-2"
     >
+      <LogIn className="h-4 w-4" />
       Continue with Google
-    </button>
+    </Button>
   );
 }

@@ -23,11 +23,11 @@ Copy `.env.example` to `.env.local` and fill in production values:
 NEXTAUTH_SECRET=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GA4_PROPERTY_ID=
+GA4_PROPERTY_ID=547723633
 GA4_SERVICE_ACCOUNT_JSON=
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_PRIVATE_KEY=
-GSC_SITE_URL=https://zoda.fit/
+GSC_SITE_URL=sc-domain:zoda.fit
 SHOPIFY_STORE_DOMAIN=zoda-fit.myshopify.com
 SHOPIFY_ADMIN_ACCESS_TOKEN=
 SUPABASE_URL=
@@ -38,7 +38,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 `SUPABASE_SERVICE_ROLE_KEY` must stay server-only in Vercel/local env. The dashboard exposes only safe connection status through `/api/integrations/supabase/health`.
 
-For GA4, prefer `GA4_SERVICE_ACCOUNT_JSON` as minified JSON or base64 JSON in Vercel. As an alternative, set `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`. The service account must have access to the GA4 property.
+For GA4 and Search Console, prefer `GA4_SERVICE_ACCOUNT_JSON` as minified JSON or base64 JSON in Vercel. As an alternative, set `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`. The service account must have access to GA4 property `547723633` and Search Console property `sc-domain:zoda.fit`.
 
 ## Routes
 
@@ -59,7 +59,7 @@ For GA4, prefer `GA4_SERVICE_ACCOUNT_JSON` as minified JSON or base64 JSON in Ve
 - `POST /api/sync/gsc`
 - `POST /api/sync/shopify`
 
-The sync routes are server-only placeholders right now. They return a safe `not_configured` response when credentials are missing.
+The sync routes are server-only. They return a safe `not_configured` response when credentials are missing.
 
 ## Deployment
 

@@ -9,13 +9,14 @@ import {
   CircleDot,
   Database,
   Gauge,
+  HelpCircle,
   Layers3,
-  LogIn,
   Menu,
+  MoreVertical,
+  Search,
   Settings,
   ShieldCheck,
   TrendingUp,
-  UserRound
 } from "lucide-react";
 import { ZodaMark } from "@/components/brand/ZodaMark";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,6 +32,12 @@ const navItems = [
   { href: "/dashboard/campaigns", label: "Campaigns", icon: TrendingUp },
   { href: "/dashboard/channels", label: "Channels", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
+];
+
+const utilityItems = [
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/settings", label: "Get Help", icon: HelpCircle },
+  { href: "/dashboard", label: "Search", icon: Search }
 ];
 
 type SupabaseStatus = {
@@ -176,27 +183,37 @@ function SidebarContent() {
       </div>
 
       <div className="mt-auto p-5">
-        <Card size="sm" className="border-border bg-card">
-          <CardContent className="p-3">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9 rounded-md">
-              <AvatarFallback className="rounded-md bg-muted text-xs font-semibold text-muted-foreground">
-                ZD
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">ZODA team</p>
-              <p className="truncate text-xs text-muted-foreground">Private workspace</p>
-            </div>
-          </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-1 pb-3">
+          {utilityItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="flex h-9 items-center gap-3 rounded-md px-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+              >
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+
         <Link
           href="/login"
-          className="mt-3 flex h-10 items-center justify-center gap-2 rounded-md border border-border text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          className="flex items-center gap-3 rounded-lg bg-muted/70 p-2.5 text-left transition-colors hover:bg-muted"
         >
-          <LogIn className="h-4 w-4" />
-          Account access
+          <Avatar className="h-9 w-9 rounded-md">
+            <AvatarFallback className="rounded-md bg-card text-xs font-semibold text-foreground">
+              ZD
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">ZODA team</p>
+            <p className="truncate text-xs text-muted-foreground">m@zoda.sg</p>
+          </div>
+          <MoreVertical className="h-4 w-4 text-muted-foreground" />
         </Link>
       </div>
     </div>

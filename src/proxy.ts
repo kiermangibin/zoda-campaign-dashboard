@@ -1,17 +1,27 @@
+import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
-import { shouldEnforceAuth } from "@/lib/auth";
+import { isApprovedZodaEmail, shouldEnforceAuth } from "@/lib/auth";
 
-export function proxy(request: NextRequest) {
+function unauthorized(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json({ ok: false, status: "unauthorized" }, { status: 401 });
+  }
+
+  return NextResponse.redirect(new URL("/login", request.url));
+}
+
+export async function proxy(request: NextRequest) {
   if (!shouldEnforceAuth()) {
     return NextResponse.next();
   }
 
-  const sessionToken =
-    request.cookies.get("next-auth.session-token") ||
-    request.cookies.get("__Secure-next-auth.session-token");
+  const sessionToken = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET
+  });
 
-  if (!sessionToken) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!sessionToken || !isApprovedZodaEmail(sessionToken.email)) {
+    return unauthorized(request);
   }
 
   return NextResponse.next();

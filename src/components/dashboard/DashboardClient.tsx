@@ -11,6 +11,23 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+const leakedChartLabels = new Set([
+  "Search impressions",
+  "SEO clicks",
+  "Sessions",
+  "Active users",
+  "Events",
+  "Shopify orders"
+]);
+
+function removeLeakedChartLabels() {
+  document.body.querySelectorAll(":scope > span").forEach((element) => {
+    if (leakedChartLabels.has(element.textContent?.trim() || "")) {
+      element.remove();
+    }
+  });
+}
+
 export function DashboardClient() {
   const [range, setRange] = useState<RangeKey>("30d");
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -49,6 +66,8 @@ export function DashboardClient() {
     return () => controller.abort();
   }, [range]);
 
+  useEffect(() => removeLeakedChartLabels, []);
+
   const sourceStyles = {
     live: {
       icon: CheckCircle2,
@@ -68,21 +87,33 @@ export function DashboardClient() {
   } as const;
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="border-primary/40 text-primary">Overview</Badge>
-            <span className="text-xs text-muted-foreground">
-              {isLoading ? "Syncing live data" : data?.statusLabel || "Dashboard data"}
-            </span>
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-            ZODA performance
+    <div className="space-y-5">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            Performance
           </h1>
-          <p className="mt-2 max-w-[720px] text-sm leading-6 text-muted-foreground">
-            Connected GA4, Search Console, and Shopify signals for traffic, search demand, and order performance.
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">
+              {isLoading ? "Loading" : data?.statusLabel || "Live data"}
+            </Badge>
+            {data?.dataSources?.map((source) => {
+              const style = sourceStyles[source.status];
+              const Icon = style.icon;
+
+              return (
+                <Badge
+                  key={source.name}
+                  variant="outline"
+                  className={cn("gap-1.5 border-border bg-card text-muted-foreground", source.status === "live" && "text-primary")}
+                  title={source.detail}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {source.name}
+                </Badge>
+              );
+            })}
+          </div>
         </div>
         <Filters
           range={range}
@@ -93,47 +124,19 @@ export function DashboardClient() {
       {!data ? (
         <Card className="border-border bg-card">
           <CardContent className="p-4 text-sm text-muted-foreground">
-            Loading GA4 and Search Console data...
+            Loading dashboard data...
           </CardContent>
         </Card>
       ) : (
         <>
           <MetricCards metrics={data.metrics} />
 
-          {data.dataSources ? (
-            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="Data coverage">
-              {data.dataSources.map((source) => {
-                const style = sourceStyles[source.status];
-                const Icon = style.icon;
-
-                return (
-                  <Card key={source.name} className="border-border bg-card">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{source.name}</p>
-                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                            {source.detail}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className={cn("shrink-0 gap-1.5", style.className)}>
-                          <Icon className="h-3.5 w-3.5" />
-                          {style.label}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </section>
-          ) : null}
-
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
             <TrendChart data={data.trend} />
             <ChannelMix data={data.channels} />
           </section>
 
-          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.55fr)]">
             <CampaignTable campaigns={data.campaigns} />
             <FunnelChart data={data.funnel} />
           </section>

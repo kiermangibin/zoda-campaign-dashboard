@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
@@ -10,16 +10,15 @@ import {
   Database,
   Gauge,
   Layers3,
+  LogOut,
   Menu,
   Settings,
-  ShieldCheck,
   TrendingUp,
 } from "lucide-react";
 import { ZodaMark } from "@/components/brand/ZodaMark";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -50,6 +49,28 @@ type AuthSession = {
     email?: string | null;
   };
 };
+
+type Navigate = (href: string) => void;
+
+async function logout(navigate: Navigate) {
+  try {
+    const csrfResponse = await fetch("/api/auth/csrf");
+    const csrf = (await csrfResponse.json()) as { csrfToken?: string };
+    await fetch("/api/auth/signout", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        csrfToken: csrf.csrfToken || "",
+        callbackUrl: "/login",
+        json: "true"
+      })
+    });
+  } catch {
+    // The redirect still lands on the local login page; failed signout should not leave the user stranded.
+  }
+
+  navigate("/login");
+}
 
 function NavigationLinks() {
   const pathname = usePathname();
@@ -85,6 +106,7 @@ function NavigationLinks() {
 }
 
 function SidebarContent() {
+  const router = useRouter();
   const [supabaseStatus, setSupabaseStatus] = useState<SupabaseStatus | null>(null);
   const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -217,30 +239,11 @@ function SidebarContent() {
         <Separator />
       </div>
 
-      <div className="grid gap-3 p-5 pt-4">
-        <Card size="sm" className="border-border bg-card">
-          <CardContent className="p-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              Access
-            </span>
-            <Badge className="bg-primary/15 text-primary">
-              <CheckCircle2 className="mr-1 h-3 w-3" />
-              Active
-            </Badge>
-          </div>
-          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            Google auth is limited to approved @zoda.sg accounts.
-          </p>
-          </CardContent>
-        </Card>
-
-        <Card size="sm" className="border-border bg-card">
-          <CardContent className="p-3">
+      <div className="p-5 pt-4">
+        <div className="rounded-md border border-border bg-card p-3">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Database className="h-4 w-4 text-primary" />
-            Data sources
+            Sources
           </div>
           <div className="mt-3 grid gap-2 text-xs">
             {sources.map((source) => (
@@ -253,21 +256,32 @@ function SidebarContent() {
               </div>
             ))}
           </div>
-          </CardContent>
-        </Card>
+        </div>
       </div>
 
       <div className="mt-auto p-5">
-        <div className="flex items-center gap-3 rounded-md border border-border bg-muted/50 p-2.5 text-left">
-          <Avatar className="h-9 w-9 rounded-md">
-            <AvatarFallback className="rounded-md bg-card text-xs font-semibold text-foreground">
-              {accountInitials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">{accountName}</p>
-            <p className="truncate text-xs text-muted-foreground">{accountEmail}</p>
+        <div className="rounded-md border border-border bg-muted/40 p-2.5">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 rounded-md">
+              <AvatarFallback className="rounded-md bg-card text-xs font-semibold text-foreground">
+                {accountInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">{accountName}</p>
+              <p className="truncate text-xs text-muted-foreground">{accountEmail}</p>
+            </div>
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mt-2 w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => void logout(router.push)}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </div>
     </div>
@@ -303,8 +317,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1540px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-card text-primary">
                 <Layers3 className="h-4 w-4" />
@@ -312,7 +326,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">ZODA Analytics</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Traffic, search, and order performance
+                  Traffic, search, orders
                 </p>
               </div>
             </div>

@@ -19,10 +19,9 @@ const statusClasses: Record<ActionStatus, string> = {
 
 export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card/95">
       <CardHeader className="pb-0">
         <CardTitle>Search demand</CardTitle>
-        <p className="text-sm text-muted-foreground">Search Console query and page rows ranked by current demand.</p>
       </CardHeader>
       <CardContent className="pt-4">
         {campaigns.length === 0 ? (

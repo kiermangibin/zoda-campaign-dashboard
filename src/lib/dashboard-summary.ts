@@ -231,11 +231,6 @@ function buildSummaryFromSources(
         detail: shopify.connected
           ? shopify.error || `${wholeNumber(shopify.orders)} synced orders in this range`
           : "Connect Shopify from Settings."
-      },
-      {
-        name: "Paid and social",
-        status: "not_connected",
-        detail: "Ad platform connectors are not connected yet."
       }
     ],
     metrics: [

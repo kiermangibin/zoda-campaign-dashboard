@@ -1,47 +1,59 @@
 import type { ActionStatus, CampaignRow } from "@/types/dashboard";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 const statusClasses: Record<ActionStatus, string> = {
-  scale: "bg-zoda-mint text-zoda-black",
-  fix: "bg-yellow-300 text-zoda-black",
-  pause: "bg-red-400 text-zoda-black",
-  watch: "bg-zoda-panel2 text-zoda-mint border border-zoda-line"
+  scale: "bg-primary/15 text-primary",
+  fix: "bg-yellow-300/15 text-yellow-200",
+  pause: "bg-red-400/15 text-red-200",
+  watch: "border-border bg-secondary text-secondary-foreground"
 };
 
 export function CampaignTable({ campaigns }: { campaigns: CampaignRow[] }) {
   return (
-    <section className="zoda-card overflow-hidden">
-      <div className="border-b border-zoda-line p-5">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">Campaign table</p>
-        <h2 className="mt-2 font-display text-2xl font-black uppercase leading-none">Signals and next moves</h2>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-[840px] w-full text-left">
-          <thead className="bg-zoda-panel2/80 text-xs font-black uppercase tracking-[0.12em] text-zoda-muted">
-            <tr>
-              <th className="px-5 py-4">Campaign</th>
-              <th className="px-5 py-4">Channel</th>
-              <th className="px-5 py-4">Metric</th>
-              <th className="px-5 py-4">Signal</th>
-              <th className="px-5 py-4">Next Move</th>
-            </tr>
-          </thead>
-          <tbody>
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-0">
+        <CardTitle>Signals and next moves</CardTitle>
+        <p className="text-sm text-muted-foreground">Campaign rows to scale, fix, watch, or pause.</p>
+      </CardHeader>
+      <CardContent className="pt-4">
+        <Table className="min-w-[840px]">
+          <TableHeader className="bg-muted/40">
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="px-3 text-xs text-muted-foreground">Campaign</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Channel</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Metric</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Signal</TableHead>
+              <TableHead className="px-3 text-xs text-muted-foreground">Next move</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {campaigns.map((campaign) => (
-              <tr key={campaign.name} className="border-t border-zoda-line align-top">
-                <td className="px-5 py-4 text-sm font-black uppercase text-zoda-text">{campaign.name}</td>
-                <td className="px-5 py-4 text-sm font-semibold text-zoda-muted">{campaign.channel}</td>
-                <td className="px-5 py-4 text-sm font-black text-zoda-mint">{campaign.metric}</td>
-                <td className="px-5 py-4 text-sm font-semibold leading-relaxed text-zoda-muted">{campaign.signal}</td>
-                <td className="px-5 py-4">
-                  <span className={`inline-flex px-3 py-2 text-xs font-black uppercase tracking-[0.1em] ${statusClasses[campaign.status]}`}>
+              <TableRow key={campaign.name} className="border-border align-top">
+                <TableCell className="px-3 py-3 font-medium text-foreground">{campaign.name}</TableCell>
+                <TableCell className="px-3 py-3 text-muted-foreground">{campaign.channel}</TableCell>
+                <TableCell className="px-3 py-3 font-semibold text-primary">{campaign.metric}</TableCell>
+                <TableCell className="max-w-[280px] whitespace-normal px-3 py-3 leading-6 text-muted-foreground">
+                  {campaign.signal}
+                </TableCell>
+                <TableCell className="px-3 py-3">
+                  <Badge className={statusClasses[campaign.status]}>
                     {campaign.nextMove}
-                  </span>
-                </td>
-              </tr>
+                  </Badge>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }

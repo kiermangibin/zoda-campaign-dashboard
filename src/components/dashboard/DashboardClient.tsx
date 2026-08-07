@@ -8,6 +8,8 @@ import { Filters } from "@/components/dashboard/Filters";
 import { MetricCards } from "@/components/dashboard/MetricCards";
 import { getDashboardSummary } from "@/data/mock-dashboard";
 import type { RangeKey } from "@/types/dashboard";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function DashboardClient() {
   const [range, setRange] = useState<RangeKey>("30d");
@@ -15,44 +17,48 @@ export function DashboardClient() {
   const data = useMemo(() => getDashboardSummary(range, campaign), [range, campaign]);
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-8 py-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.55fr)] lg:items-end">
+    <div className="space-y-5">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-zoda-mint">Campaign command center</p>
-          <h1 className="mt-4 max-w-[880px] font-display text-5xl font-black uppercase leading-[0.9] text-zoda-text md:text-7xl">
-            Turn campaign signals into next moves
-          </h1>
-          <p className="mt-6 max-w-[680px] text-lg font-semibold leading-relaxed text-zoda-muted">
-            Track Ads, Social, SEO and Website performance in one private dashboard built for ZODA decision-making.
-          </p>
-        </div>
-        <div className="zoda-card p-5">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">Current focus</p>
-          <h2 className="mt-3 font-display text-3xl font-black uppercase leading-none">Core + MAB intent</h2>
-          <p className="mt-4 text-sm font-semibold leading-relaxed text-zoda-muted">
-            Use this mock layer now, then replace each endpoint with GA4, GSC, Shopify and ad data as access is approved.
-          </p>
-          <div className="mt-5">
-            <Filters
-              range={range}
-              campaign={campaign}
-              onRangeChange={setRange}
-              onCampaignChange={setCampaign}
-            />
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="border-primary/40 text-primary">Overview</Badge>
+            <span className="text-xs text-muted-foreground">Last synced mock data</span>
           </div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+            Campaign performance
+          </h1>
+          <p className="mt-2 max-w-[720px] text-sm leading-6 text-muted-foreground">
+            Track demand, spend efficiency, and next actions across Ads, Social, SEO, and Website.
+          </p>
         </div>
+        <Filters
+          range={range}
+          campaign={campaign}
+          onRangeChange={setRange}
+          onCampaignChange={setCampaign}
+        />
       </section>
 
       <MetricCards metrics={data.metrics} />
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <TrendChart data={data.trend} />
         <ChannelMix data={data.channels} />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(320px,0.75fr)_minmax(0,1.25fr)]">
-        <FunnelChart data={data.funnel} />
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <CampaignTable campaigns={data.campaigns} />
+        <div className="grid gap-4">
+          <FunnelChart data={data.funnel} />
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-foreground">Current focus</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Core products and Mission Athlete Bag intent are the priority while live GA4, GSC, Shopify, and ad data come online.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       <ActionNotes actions={data.actions} />

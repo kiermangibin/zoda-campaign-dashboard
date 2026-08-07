@@ -15,24 +15,24 @@ import {
   YAxis
 } from "recharts";
 import type { ChannelPerformance, FunnelStep, TrendPoint } from "@/types/dashboard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const tooltipStyle = {
-  background: "#07100d",
-  border: "1px solid rgba(117, 255, 202, 0.32)",
-  borderRadius: 0,
+  background: "#08110e",
+  border: "1px solid rgba(117, 255, 202, 0.18)",
+  borderRadius: 8,
   color: "#f5f7f4"
 };
 
 export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
-    <section className="zoda-card p-5">
-      <div className="mb-5 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">Trend</p>
-          <h2 className="mt-2 font-display text-2xl font-black uppercase leading-none">Daily performance</h2>
-        </div>
-      </div>
-      <div className="h-[320px]">
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-0">
+        <CardTitle>Daily performance</CardTitle>
+        <p className="text-sm text-muted-foreground">Revenue and conversions across the selected window.</p>
+      </CardHeader>
+      <CardContent className="pt-4">
+      <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ left: -20, right: 12, top: 8, bottom: 0 }}>
             <defs>
@@ -50,16 +50,20 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }
 
 export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
   return (
-    <section className="zoda-card p-5">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">Channel mix</p>
-      <h2 className="mt-2 font-display text-2xl font-black uppercase leading-none">Where demand starts</h2>
-      <div className="mt-5 h-[260px]">
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-0">
+        <CardTitle>Channel mix</CardTitle>
+        <p className="text-sm text-muted-foreground">Share of demand by channel.</p>
+      </CardHeader>
+      <CardContent className="pt-4">
+      <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="share" nameKey="channel" innerRadius={58} outerRadius={96} paddingAngle={2}>
@@ -76,22 +80,26 @@ export function ChannelMix({ data }: { data: ChannelPerformance[] }) {
       </div>
       <div className="grid gap-2">
         {data.map((item) => (
-          <div key={item.channel} className="flex items-center justify-between border-t border-zoda-line py-3">
-            <span className="text-xs font-black uppercase tracking-[0.12em] text-zoda-text">{item.channel}</span>
-            <span className="text-sm font-black text-zoda-mint">{item.share}%</span>
+          <div key={item.channel} className="flex items-center justify-between border-t border-border py-2.5">
+            <span className="text-sm font-medium text-foreground">{item.channel}</span>
+            <span className="text-sm font-semibold text-primary">{item.share}%</span>
           </div>
         ))}
       </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }
 
 export function FunnelChart({ data }: { data: FunnelStep[] }) {
   return (
-    <section className="zoda-card p-5">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">Funnel</p>
-      <h2 className="mt-2 font-display text-2xl font-black uppercase leading-none">Impression to order</h2>
-      <div className="mt-5 h-[300px]">
+    <Card className="border-border bg-card">
+      <CardHeader className="pb-0">
+        <CardTitle>Funnel</CardTitle>
+        <p className="text-sm text-muted-foreground">Impression to order path.</p>
+      </CardHeader>
+      <CardContent className="pt-4">
+      <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 38, right: 12, top: 0, bottom: 0 }}>
             <CartesianGrid stroke="rgba(117, 255, 202, 0.08)" horizontal={false} />
@@ -102,6 +110,7 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }

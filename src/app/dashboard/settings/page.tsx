@@ -1,4 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const envGroups = [
   {
@@ -18,25 +20,32 @@ const envGroups = [
 export default function SettingsPage() {
   return (
     <AppShell>
-      <section className="mb-6 py-8">
-        <p className="text-sm font-black uppercase tracking-[0.2em] text-zoda-mint">Settings</p>
-        <h1 className="mt-4 font-display text-5xl font-black uppercase leading-none">Data source readiness</h1>
-        <p className="mt-5 max-w-[760px] text-lg font-semibold leading-relaxed text-zoda-muted">
+      <section className="mb-5">
+        <Badge variant="outline" className="border-primary/40 text-primary">Settings</Badge>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">Data source readiness</h1>
+        <p className="mt-2 max-w-[760px] text-sm leading-6 text-muted-foreground">
           Keep secrets in Vercel only. This page documents what the dashboard expects before each sync route is enabled.
         </p>
       </section>
       <section className="grid gap-4 lg:grid-cols-3">
         {envGroups.map((group) => (
-          <article key={group.title} className="zoda-card p-5">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-zoda-mint">{group.title}</p>
-            <ul className="mt-5 space-y-3">
-              {group.keys.map((key) => (
-                <li key={key} className="border-t border-zoda-line pt-3 text-sm font-black uppercase tracking-[0.08em] text-zoda-text">
-                  {key}
-                </li>
-              ))}
-            </ul>
-          </article>
+          <Card key={group.title} className="border-border bg-card">
+            <CardHeader>
+              <CardTitle>{group.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {group.keys.map((key) => (
+                  <li
+                    key={key}
+                    className="rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-foreground"
+                  >
+                    {key}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         ))}
       </section>
     </AppShell>

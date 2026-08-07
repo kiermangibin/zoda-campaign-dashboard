@@ -11,11 +11,11 @@ interface FiltersProps {
 
 export function Filters({ range, campaign, onRangeChange, onCampaignChange }: FiltersProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <select
         value={range}
         onChange={(event) => onRangeChange(event.target.value as RangeKey)}
-        className="border border-zoda-line bg-zoda-panel px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-zoda-text outline-none focus:border-zoda-mint"
+        className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
         aria-label="Date range"
       >
         <option value="7d">Last 7 days</option>
@@ -25,7 +25,7 @@ export function Filters({ range, campaign, onRangeChange, onCampaignChange }: Fi
       <select
         value={campaign}
         onChange={(event) => onCampaignChange(event.target.value)}
-        className="border border-zoda-line bg-zoda-panel px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-zoda-text outline-none focus:border-zoda-mint"
+        className="h-9 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
         aria-label="Campaign"
       >
         <option value="all">All campaigns</option>

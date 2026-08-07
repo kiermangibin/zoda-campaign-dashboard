@@ -1,10 +1,11 @@
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-display: "Commuters Sans", "Arial Black", Arial, sans-serif;
-  --font-body: "Commuters Sans", Inter, Arial, sans-serif;
+  --font-display: var(--font-sans), Inter, Arial, sans-serif;
+  --font-body: var(--font-sans), Inter, Arial, sans-serif;
   color-scheme: dark;
 }
 
@@ -20,10 +21,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
-  background:
-    radial-gradient(circle at 22% 12%, rgba(85, 205, 161, 0.12), transparent 28rem),
-    radial-gradient(circle at 82% 6%, rgba(85, 205, 161, 0.1), transparent 24rem),
-    #030706;
+  background: #030706;
   color: #f5f7f4;
   font-family: var(--font-body);
 }
@@ -41,13 +39,95 @@ select {
 
 .zoda-grid-bg {
   background-image:
-    linear-gradient(rgba(85, 205, 161, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(85, 205, 161, 0.05) 1px, transparent 1px);
-  background-size: 80px 80px;
+    linear-gradient(rgba(117, 255, 202, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(117, 255, 202, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
 }
 
 .zoda-card {
-  border: 1px solid rgba(117, 255, 202, 0.2);
-  background: linear-gradient(135deg, rgba(16, 26, 22, 0.94), rgba(5, 10, 8, 0.92));
-  box-shadow: 0 24px 80px rgba(85, 205, 161, 0.08);
+  border: 1px solid rgba(117, 255, 202, 0.16);
+  background: rgba(8, 14, 12, 0.94);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-sans), Inter, Arial, sans-serif;
+  }
+  :root {
+    --background: 160 33% 3%;
+    --foreground: 105 16% 96%;
+    --card: 160 24% 7%;
+    --card-foreground: 105 16% 96%;
+    --popover: 160 24% 7%;
+    --popover-foreground: 105 16% 96%;
+    --primary: 157 53% 57%;
+    --primary-foreground: 160 33% 3%;
+    --secondary: 156 16% 13%;
+    --secondary-foreground: 105 16% 96%;
+    --muted: 156 14% 14%;
+    --muted-foreground: 147 9% 69%;
+    --accent: 157 32% 19%;
+    --accent-foreground: 105 16% 96%;
+    --destructive: 0 70% 62%;
+    --border: 157 100% 73% / 0.16;
+    --input: 157 100% 73% / 0.18;
+    --ring: 157 53% 57%;
+    --chart-1: 157 53% 57%;
+    --chart-2: 188 52% 58%;
+    --chart-3: 44 92% 63%;
+    --chart-4: 12 82% 66%;
+    --chart-5: 269 57% 68%;
+    --radius: 0.5rem;
+    --sidebar: 160 28% 5%;
+    --sidebar-foreground: 105 16% 96%;
+    --sidebar-primary: 157 53% 57%;
+    --sidebar-primary-foreground: 160 33% 3%;
+    --sidebar-accent: 156 18% 12%;
+    --sidebar-accent-foreground: 105 16% 96%;
+    --sidebar-border: 157 100% 73% / 0.14;
+    --sidebar-ring: 157 53% 57%;
+  }
+  .dark {
+    --background: 160 33% 3%;
+    --foreground: 105 16% 96%;
+    --card: 160 24% 7%;
+    --card-foreground: 105 16% 96%;
+    --popover: 160 24% 7%;
+    --popover-foreground: 105 16% 96%;
+    --primary: 157 53% 57%;
+    --primary-foreground: 160 33% 3%;
+    --secondary: 156 16% 13%;
+    --secondary-foreground: 105 16% 96%;
+    --muted: 156 14% 14%;
+    --muted-foreground: 147 9% 69%;
+    --accent: 157 32% 19%;
+    --accent-foreground: 105 16% 96%;
+    --destructive: 0 70% 62%;
+    --border: 157 100% 73% / 0.16;
+    --input: 157 100% 73% / 0.18;
+    --ring: 157 53% 57%;
+    --chart-1: 157 53% 57%;
+    --chart-2: 188 52% 58%;
+    --chart-3: 44 92% 63%;
+    --chart-4: 12 82% 66%;
+    --chart-5: 269 57% 68%;
+    --sidebar: 160 28% 5%;
+    --sidebar-foreground: 105 16% 96%;
+    --sidebar-primary: 157 53% 57%;
+    --sidebar-primary-foreground: 160 33% 3%;
+    --sidebar-accent: 156 18% 12%;
+    --sidebar-accent-foreground: 105 16% 96%;
+    --sidebar-border: 157 100% 73% / 0.14;
+    --sidebar-ring: 157 53% 57%;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }
